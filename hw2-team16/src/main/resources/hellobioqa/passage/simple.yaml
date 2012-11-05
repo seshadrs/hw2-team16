@@ -1,8 +1,0 @@
-class: edu.cmu.lti.oaqa.openqa.hellobioqa.passage.SimpleBioPassageExtractor
-hit-list-size: 1
-server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
-port: 9080
-keytermWindowScorer: edu.cmu.lti.oaqa.openqa.hello.passage.KeytermWindowScorerSum
-
-persistence-provider: |
-  inherit: ecd.default-log-persistence-provider
