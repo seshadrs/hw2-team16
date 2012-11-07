@@ -55,12 +55,40 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.3.3</version>
 		</dependency>
-
-
 		<dependency>
 			<groupId>edu.cmu.lti.oaqa.openqa</groupId>
 			<artifactId>helloqa</artifactId>
 			<version>1.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.aliasi</groupId>
+			<artifactId>lingpipe</artifactId>
+			<version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.cmu.lti.oaqa.bio.annotate</groupId>
+			<artifactId>entrezgene_wrapper</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.umass.cs</groupId>
+			<artifactId>mallet</artifactId>
+			<version>0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>dragon</groupId>
+			<artifactId>dragontool</artifactId>
+			<version>0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>dragon.nlp.tool</groupId>
+			<artifactId>heptag</artifactId>
+			<version>0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>cbioc.eas.asu.edu</groupId>
+			<artifactId>banner</artifactId>
+			<version>0.1</version>
 		</dependency>
 	</dependencies>
 	<scm>
