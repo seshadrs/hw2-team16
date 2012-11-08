@@ -1,0 +1,4 @@
+class: edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.DictionaryLookupKeytermExtractor
+
+persistence-provider: |
+  inherit: ecd.default-log-persistence-provider
