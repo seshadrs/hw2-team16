@@ -42,7 +42,7 @@ import edu.cmu.lti.oaqa.framework.data.Keyterm;
  * @author Mingtao Zhang <mingtaoz@cmu.edu>
  * 
  */
-public class BannerNERKeytermExtractor extends AbstractKeytermExtractor {
+public class BannerAndLingpipeGeneKeytermExtractor extends AbstractKeytermExtractor {
 
   private Chunker chunker;
 
@@ -59,6 +59,7 @@ public class BannerNERKeytermExtractor extends AbstractKeytermExtractor {
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
+
     propertiesFilename = "src/main/resources/model/banner.properties";// (String)
                                                                       // aContext.getConfigParameterValue("propertiesFilename");
     modelFilename = "src/main/resources/model/gene_model_v02.bin";// (String)
@@ -68,7 +69,8 @@ public class BannerNERKeytermExtractor extends AbstractKeytermExtractor {
       tokenizer = properties.getTokenizer();
       tagger = CRFTagger.load(new File(modelFilename), properties.getLemmatiser(),
               properties.getPosTagger());
-      // chunker = (Chunker) AbstractExternalizable.readObject(new File(featurePath));
+      chunker = (Chunker) AbstractExternalizable.readObject(new File(
+              "src/main/resources/model/ne-en-bio-genetag.hmmchunker"));
     } catch (Exception e) {
       // don't case about different types of Exceptions
       e.printStackTrace();
@@ -79,17 +81,26 @@ public class BannerNERKeytermExtractor extends AbstractKeytermExtractor {
   @Override
   protected List<Keyterm> getKeyterms(String question) {
     List<Keyterm> keyterms = new ArrayList<Keyterm>();
-    Sentence bsentence = new Sentence(null, question);
-    tokenizer.tokenize(bsentence);
-    tagger.tag(bsentence);
-    String previous = "abc";
-    for (Mention m : bsentence.getMentions()) {
-      if (m.toString().contains("GENE") && !m.toString().contains(previous)) {
-        String rawGene = m.toString();// sentence.substring(t.getToken().getStart(),
-                                      // t.getToken().getEnd());
-        String gene = rawGene.substring(rawGene.indexOf(" ") + 1);
+    if (question.length() <= 200) {
+      // banner
+      Sentence bsentence = new Sentence(null, question);
+      tokenizer.tokenize(bsentence);
+      tagger.tag(bsentence);
+      String previous = "abc";
+      for (Mention m : bsentence.getMentions()) {
+        if (m.toString().contains("GENE") && !m.toString().contains(previous)) {
+          String rawGene = m.toString();
+          String gene = rawGene.substring(rawGene.indexOf(" ") + 1);
+          keyterms.add(new Keyterm(gene));
+          previous = gene;
+        }
+      }
+    } else {
+      // lingpipe
+      Chunking chunking = chunker.chunk(question);
+      for (Chunk c : chunking.chunkSet()) {
+        String gene = question.substring(c.start(), c.end());
         keyterms.add(new Keyterm(gene));
-        previous = gene;
       }
     }
     return keyterms;
