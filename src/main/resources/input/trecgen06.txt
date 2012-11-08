@@ -1,5 +1,5 @@
 160|What is the role of PrnP in mad cow disease?
-161|What is the role of IDE in Alzheimer's disease
+161|What is the role of IDE in Alzheimer's disease?
 162|What is the role of MMS2 in cancer?
 163|What is the role of APC (adenomatous polyposis coli) in colon cancer?
 164|What is the role of Nurr-77 in Parkinson's disease?

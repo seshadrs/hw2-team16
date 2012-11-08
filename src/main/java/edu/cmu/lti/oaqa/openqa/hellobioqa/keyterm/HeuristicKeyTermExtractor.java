@@ -49,7 +49,6 @@ public class HeuristicKeyTermExtractor extends AbstractKeytermExtractor{
     // TODO Auto-generated method stub
     List<Keyterm> keyterms = new ArrayList<Keyterm>();
     
-    System.out.println("%%%%%%%%%%%%111111111111111111%%%%%%%%%%%%%%");
     Map<Integer,Integer> geneCandidates = nounPhraseAnnotator.getGeneSpans(context);
     Double totalScore = 0.0;
     Map<String,Double> candidateScores= new HashMap<String,Double>();
