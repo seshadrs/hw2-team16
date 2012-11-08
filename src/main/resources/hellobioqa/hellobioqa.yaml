@@ -18,6 +18,7 @@ pipeline:
       - inherit: hellobioqa.keyterm.banner-lingpipe-keyterm-extractor
       - inherit: hellobioqa.keyterm.heuristic-keyterm-extractor
       - inherit: hellobioqa.keyterm.dictionary-lookup-keyterm-extractor
+      - inherit: hellobioqa.keyterm.shirley-lingpipe-keyterm-extractor
 
   - inherit: jdbc.sqlite.cse.phase 
     name: retrieval-strategist
