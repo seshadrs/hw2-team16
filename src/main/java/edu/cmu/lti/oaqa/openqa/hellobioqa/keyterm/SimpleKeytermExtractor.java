@@ -24,6 +24,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.cmu.lti.oaqa.cse.basephase.keyterm.AbstractKeytermExtractor;
 import edu.cmu.lti.oaqa.framework.data.Keyterm;
+import edu.cmu.lti.oaqa.openqa.hellobioqa.inhancement.GoldenKeytermsProvider;
 
 /**
  * 
@@ -39,7 +40,7 @@ public class SimpleKeytermExtractor extends AbstractKeytermExtractor {
 
   @Override
   protected List<Keyterm> getKeyterms(String question) {
-
+    
     question = question.replace('?', ' ');
     question = question.replace('(', ' ');
     question = question.replace('[', ' ');
@@ -53,7 +54,6 @@ public class SimpleKeytermExtractor extends AbstractKeytermExtractor {
     for (int i = 0; i < questionTokens.length; i++) {
       keyterms.add(new Keyterm(questionTokens[i]));
     }
-
     return keyterms;
   }
 }

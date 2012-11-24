@@ -1,5 +1,5 @@
 160|What is the role of PrnP in mad cow disease?
-161|What is the role of IDE in Alzheimer's disease?
+161|What is the role of IDE in Alzheimer's disease
 162|What is the role of MMS2 in cancer?
 163|What is the role of APC (adenomatous polyposis coli) in colon cancer?
 164|What is the role of Nurr-77 in Parkinson's disease?
@@ -7,7 +7,7 @@
 166|What is the role of Transforming growth factor-beta1 (TGF-beta1) in cerebral amyloid angiopathy (CAA)?
 167|How does nucleoside diphosphate kinase (NM23) contribute to tumor progression?
 168|How does BARD1 regulate BRCA1 activity?
-169|How does APC (adenomatous polyposis coli) protein affect actin assembly?
+169|How does APC (adenomatous polyposis coli) protein affect actin assembly
 170|How does COP2 contribute to CFTR export from the endoplasmic reticulum?
 171|How does Nurr-77 delete T cells before they migrate to the spleen or lymph nodes and how does this impact autoimmunity?
 172|How does p53 affect apoptosis?
