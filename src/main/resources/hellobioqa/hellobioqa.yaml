@@ -1,7 +1,7 @@
-configuration: 
+configuration:
   name: hellobioqa
   author: team16
-  
+
 persistence-provider:
   inherit: helloqa.db.local-persistence-provider
 
@@ -19,7 +19,7 @@ pipeline:
   - inherit: jdbc.sqlite.cse.phase 
     name: retrieval-strategist
     options: |
-      - inherit: hellobioqa.retrieval.simple-solr-strategist
+      - inherit: hellobioqa.retrieval.m2-solr-strategist
           
   - inherit: jdbc.sqlite.cse.phase  
     name: passage-extractor
@@ -29,9 +29,9 @@ pipeline:
   - inherit: helloqa.eval.keyterm-aggregator-consumer
 
   - inherit: jdbc.eval.retrieval-aggregator-consumer
-      
+
   - inherit: helloqa.eval.passage-map-aggregator-consumer      
-    
+
 post-process: 
   - inherit: helloqa.eval.keyterm-evaluator-consumer
   - inherit: report.csv-report-generator
