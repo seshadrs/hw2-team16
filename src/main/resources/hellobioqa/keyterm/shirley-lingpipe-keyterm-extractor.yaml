@@ -1,5 +1,0 @@
-class: edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.LingPipeKeytermExtractor
-modelfile: "src/main/resources/model/ne-en-bio-genetag.hmmchunker"
-
-persistence-provider: |
-    inherit: ecd.default-log-persistence-provider
