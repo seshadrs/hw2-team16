@@ -163,23 +163,25 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		while (iter.hasNext()) {
 			keyterms.add(iter.next());
 		}
+		/*
 		// compare with gs
 		try {
 			// Create file
-			FileWriter fstream = new FileWriter("out.txt", true);
-			BufferedWriter out = new BufferedWriter(fstream);
+			// FileWriter fstream = new FileWriter("out.txt", true);
+			// BufferedWriter out = new BufferedWriter(fstream);
 
 			iter = keyterms.iterator();
 			while (iter.hasNext()) {
 				String keyterm = iter.next().toString();
-				out.append(keyterm + ", ");
+			//	out.append(keyterm + ", ");
 			}
-			out.append("\n");
+			//out.append("\n");
 			// Close the output stream
-			out.close();
+			//out.close();
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
+		*/
 		return keyterms;
 	}
 }
