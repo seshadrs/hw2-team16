@@ -1,0 +1,14 @@
+class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.SimpleBioSolrRetrievalStrategist
+cross-opts:
+  hit-list-size: [200]
+  singleWordWeight: [1f]
+  nearWeight: [0.1f]
+  dependencyLength: [20]
+  threshold: [0f]
+  synonymWeight: [0.1f]
+  numberOfSynonym: [2]
+server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
+port: 9080
+
+persistence-provider: |
+  inherit: ecd.default-log-persistence-provider

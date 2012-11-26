@@ -1,8 +1,5 @@
-class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.SimpleBioSolrRetrievalStrategist
-hit-list-size: 100
-singleWordWeight: 2
-dependencyLength: 1
-threshold: 0
+class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.SimpleSolrRetrievalStrategist
+hit-list-size: 200
 server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
 port: 9080
 

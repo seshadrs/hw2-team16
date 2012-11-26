@@ -39,9 +39,15 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
 
   protected int hitListSize;
 
-  protected int singleWordWeight;
+  protected double singleWordWeight;
   
-  protected double threshold = 0;
+  protected double nearWeight;
+  
+  protected int numberOfSynonym;
+  
+  protected double threshold;
+  
+  protected double synonymWeight;
 
   protected int dependencyLength;
   
@@ -59,10 +65,22 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       this.hitListSize = Integer.parseInt((String) aContext.getConfigParameterValue("hit-list-size"));
     }
     try {
-      this.singleWordWeight = (Integer) (aContext.getConfigParameterValue("singleWordWeight"));
+      this.numberOfSynonym = (Integer) (aContext.getConfigParameterValue("numberOfSynonym"));
     } catch (ClassCastException e) { 
       // all cross-opts are strings?
-      this.singleWordWeight = Integer.parseInt((String) aContext.getConfigParameterValue("singleWordWeight"));
+      this.numberOfSynonym = Integer.parseInt((String) aContext.getConfigParameterValue("numberOfSynonym"));
+    }
+    try {
+      this.singleWordWeight = (Double) (aContext.getConfigParameterValue("singleWordWeight"));
+    } catch (ClassCastException e) { 
+      // all cross-opts are strings?
+      this.singleWordWeight = Double.parseDouble((String) aContext.getConfigParameterValue("singleWordWeight"));
+    }
+    try {
+      this.nearWeight = (Double) (aContext.getConfigParameterValue("nearWeight"));
+    } catch (ClassCastException e) { 
+      // all cross-opts are strings?
+      this.nearWeight = Double.parseDouble((String) aContext.getConfigParameterValue("nearWeight"));
     }
     try {
       this.dependencyLength = (Integer) (aContext.getConfigParameterValue("dependencyLength"));
@@ -70,14 +88,18 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       // all cross-opts are strings?
       this.dependencyLength = Integer.parseInt((String) aContext.getConfigParameterValue("dependencyLength"));
     }
-    /*
     try {
-      this.threshold = (Double) (aContext.getConfigParameterValue("threshold"));
+      this.synonymWeight = (Float) (aContext.getConfigParameterValue("synonymWeight"));
     } catch (ClassCastException e) { 
       // all cross-opts are strings?
-      this.threshold = Double.parseDouble((String) aContext.getConfigParameterValue("threshold"));
+      this.synonymWeight = Float.parseFloat((String) aContext.getConfigParameterValue("synonymWeight"));
     }
-    */
+    try {
+      this.threshold = (Float) (aContext.getConfigParameterValue("threshold"));
+    } catch (ClassCastException e) { 
+      // all cross-opts are strings?
+      this.threshold = Float.parseFloat((String) aContext.getConfigParameterValue("threshold"));
+    }
     String serverUrl = (String) aContext.getConfigParameterValue("server");
     Integer serverPort = (Integer) aContext.getConfigParameterValue("port");
     Boolean embedded = (Boolean) aContext.getConfigParameterValue("embedded");
@@ -92,19 +114,9 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
 
   @Override
   protected final List<RetrievalResult> retrieveDocuments(String questionText,
-          List<Keyterm> keyterms) {
-    List<String> temp = new ArrayList<String>();
-    // add synonyms
-    for(Keyterm keyterm: keyterms){
-      temp.add(keyterm.getText());
-      List<String> t = SynonymProvider.getSynonyms(keyterm.getText(), 2);
-      if(t != null) {
-        temp.addAll(t);
-      }
-    }
-    
-    String query = formulateQuery(temp);
-    //query = "\"" + query + " " + queryFromQuestion(questionText) + "\"";
+          List<Keyterm> keyterms) {    
+    String query = formulateQuery(keyterms);
+    // query = query + " " + queryFromQuestion(questionText);
     System.out.println("Query: " + query);
     return retrieveDocuments(query);
   }
@@ -113,19 +125,32 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     return questionText.replace("?", "");
   }
 
-  protected String formulateQuery(List<String> keyterms) {
-    
+  protected String formulateQuery(List<Keyterm> keyterms) {
     StringBuffer result = new StringBuffer();
-    for (String keyterm : keyterms) {
-      String temp = keyterm;
+    for (Keyterm keyterm : keyterms) {
+      String temp = keyterm.getText();
+      List<String> t = SynonymProvider.getSynonyms(keyterm.getText(), numberOfSynonym);
+      if(t != null && temp.contains(" ")) {//TODO
+        result.append("#AND(");
+        for(String syn: t){
+          if (syn.contains(" ")) {
+            result.append(near(syn) + "^"+nearWeight+" ");
+            result.append(and(syn) + " ");
+          } else {
+            result.append(syn + "^"+singleWordWeight+" ");
+          }
+        }
+        result.append(")^"+synonymWeight+" ");
+      }
       if (temp.contains(" ")) {
-        // result.append(near(temp) + " ");
+        result.append(near(temp) + "^"+nearWeight+" ");
         result.append(and(temp) + " ");
+        // result.append("\""+temp+"\"~1 ");
       } else {
         result.append(temp + "^"+singleWordWeight+" ");
       }
     }
-    String query = "#AND(" + result.toString().trim() + ")";//^" + combinationWeight;
+    String query = "#AND("+result.toString().trim() + ")";//^" + combinationWeight;
     return query;
   }
 
@@ -186,10 +211,8 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
                 (Float) doc.getFieldValue("score"), query);
-        // TODO verify whether this is good
         if ((Float) doc.getFieldValue("score") < threshold)
           break;
-
         result.add(r);
         System.out.println(doc.getFieldValue("id"));
       }
