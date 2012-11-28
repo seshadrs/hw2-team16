@@ -43,6 +43,8 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   
   protected double nearWeight;
   
+  protected double geneWeight;
+  
   protected int numberOfSynonym;
   
   protected double threshold;
@@ -75,6 +77,12 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     } catch (ClassCastException e) { 
       // all cross-opts are strings?
       this.singleWordWeight = Double.parseDouble((String) aContext.getConfigParameterValue("singleWordWeight"));
+    }
+    try {
+      this.geneWeight = (Double) (aContext.getConfigParameterValue("geneWeight"));
+    } catch (ClassCastException e) { 
+      // all cross-opts are strings?
+      this.geneWeight = Double.parseDouble((String) aContext.getConfigParameterValue("geneWeight"));
     }
     try {
       this.nearWeight = (Double) (aContext.getConfigParameterValue("nearWeight"));
@@ -127,33 +135,54 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
 
   protected String formulateQuery(List<Keyterm> keyterms) {
     StringBuffer result = new StringBuffer();
+    for(Keyterm term : keyterms){
+      if(term.getProbability() == 0){
+        // not a gene
+        if(term.getText().contains(" ")){
+          result.append("\"" + term.getText() + "\" AND ");
+        } else {
+          result.append(term.getText() + "^" + singleWordWeight + " AND ");
+        }
+      } else {
+        // is a gene
+        if(term.getText().contains(" ")){
+          result.append("\"" + term.getText() + "\"^" + geneWeight + " AND ");
+        } else {
+          result.append(term.getText() + "^" + geneWeight + " AND ");
+        }
+      }
+    }
+    /*
     for (Keyterm keyterm : keyterms) {
       String temp = keyterm.getText();
       List<String> t = SynonymProvider.getSynonyms(keyterm.getText(), numberOfSynonym);
       if(t != null && temp.contains(" ")) {//TODO
-        result.append("#AND(");
+        result.append("(");
         for(String syn: t){
           if (syn.contains(" ")) {
-            result.append(near(syn) + "^"+nearWeight+" ");
-            result.append(and(syn) + " ");
+            result.append(near(syn) + "^"+nearWeight+" AND ");
+            result.append(and(syn) + " AND ");
           } else {
-            result.append(syn + "^"+singleWordWeight+" ");
+            result.append(syn + "^"+singleWordWeight+" AND ");
           }
         }
-        result.append(")^"+synonymWeight+" ");
+        result.delete(result.length() - 5, result.length());
+        result.append(")^"+synonymWeight+" AND ");
       }
       if (temp.contains(" ")) {
-        result.append(near(temp) + "^"+nearWeight+" ");
-        result.append(and(temp) + " ");
-        // result.append("\""+temp+"\"~1 ");
+        result.append(near(temp) + "^"+nearWeight+" AND ");
+        result.append(and(temp) + " AND ");
       } else {
-        result.append(temp + "^"+singleWordWeight+" ");
+        result.append(temp + "^"+singleWordWeight+" AND ");
       }
     }
-    String query = "#AND("+result.toString().trim() + ")";//^" + combinationWeight;
+    */
+    String query = result.toString().trim();
+    query = query.substring(0, query.length() - 4);
     return query;
   }
 
+  /*
   private String near(String relatedTerms) {
     StringBuilder result = new StringBuilder();
     String[] terms = relatedTerms.split(" ");
@@ -166,17 +195,18 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       for (int j = 0; j < terms.length - step + 1; j++) {
         for (int i = 0; i < terms.length; i++) {
           if (i >= j && i < j + step) {
-            temp[j] = temp[j] + terms[i] + " ";
+            temp[j] = temp[j] + terms[i]+" ";
           }
         }
       }
       for (String t : temp) {
-        t = "\"" + t.trim() + "\"~" + dependencyLength * (step - 1) + " ";
+        t = "\"" + t.trim() + "\"~" + dependencyLength * (step - 1) + " OR ";
         result.append(t);
       }
       step++;
     }
-    return "#AND("+result.toString().trim()+")";
+    String temp = result.toString().trim();
+    return "("+temp.substring(0, temp.length() - 3)+")";
   }
   
   private String and(String relatedTerms) {
@@ -191,18 +221,21 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       for (int j = 0; j < terms.length - step + 1; j++) {
         for (int i = 0; i < terms.length; i++) {
           if (i >= j && i < j + step) {
-            temp[j] = temp[j] + terms[i] + " ";
+            temp[j] = temp[j] + terms[i] + " AND ";
           }
         }
       }
       for (String t : temp) {
-        t = "\"" + t.trim() + "\" ";
+        String tem = t.trim();
+        t = "("+ tem.substring(0, tem.length() - 4)+ ") OR ";
         result.append(t);
       }
       step++;
     }
-    return "#AND("+result.toString().trim()+")";
+    String temp = result.toString().trim();
+    return "("+temp.substring(0, temp.length() - 3)+")";
   }
+  */
 
   private List<RetrievalResult> retrieveDocuments(String query) {
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();

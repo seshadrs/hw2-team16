@@ -146,9 +146,13 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 					if (containFullString(nlp, hmm)) {
 						if (!containKeyterm(keyterms, new Keyterm(nlp)))
 							keyterms.add(new Keyterm(nlp));
-						if (!containKeyterm(keyterms, new Keyterm(hmm)))
-							keyterms.add(new Keyterm(hmm));
-						String temp = nlp.replace(hmm, "");
+						if (!containKeyterm(keyterms, new Keyterm(hmm))){
+						  Keyterm temp = new Keyterm(hmm);
+						  temp.setProbablity(1);
+							keyterms.add(temp);
+						}
+						String temp = nlp.replace(hmm+" ", "");
+						//TODO @Shirley replace should add a " " or it gives double spaces
 						if (!containKeyterm(keyterms, new Keyterm(temp.trim())))
 							keyterms.add(new Keyterm(temp.trim()));
 					} else {
@@ -161,27 +165,27 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 
 		Iterator<Keyterm> iter = keyterms_nlp_verb.iterator();
 		while (iter.hasNext()) {
-			keyterms.add(iter.next());
+		  Keyterm temp = iter.next();
+			keyterms.add(temp);
 		}
-		/*
+		
 		// compare with gs
 		try {
 			// Create file
-			// FileWriter fstream = new FileWriter("out.txt", true);
-			// BufferedWriter out = new BufferedWriter(fstream);
-
+			 FileWriter fstream = new FileWriter("out.txt", true);
+			 BufferedWriter out = new BufferedWriter(fstream);
 			iter = keyterms.iterator();
 			while (iter.hasNext()) {
 				String keyterm = iter.next().toString();
-			//	out.append(keyterm + ", ");
+				out.append(keyterm + ", ");
 			}
-			//out.append("\n");
-			// Close the output stream
-			//out.close();
+			out.append("\n");
+			//Close the output stream
+			out.close();
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
-		*/
+		
 		return keyterms;
 	}
 }
