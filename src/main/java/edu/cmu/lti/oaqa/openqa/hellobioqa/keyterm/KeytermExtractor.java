@@ -85,6 +85,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 	protected List<Keyterm> getKeyterms(String question) {
 		List<Keyterm> keyterms_hmm = new ArrayList<Keyterm>();
 		List<Keyterm> keyterms = new ArrayList<Keyterm>();
+		List<Keyterm> keyterms_nlp_verb = new ArrayList<Keyterm>();
 		List<Keyterm> keyterms_nlp_noun = new ArrayList<Keyterm>();
 
 		String[] questions = question.split("\\(|\\)");
@@ -95,10 +96,8 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		Map<Integer, Integer> nounSpans = posTagNER.getNounSpans(question);
 		Set<Entry<Integer, Integer>> entrySet = verbSpans.entrySet();
 		for (Entry<Integer, Integer> entry : entrySet) {
-			Keyterm verb = new Keyterm(question.substring(entry.getKey(),
-					entry.getValue()));
-			verb.setProbablity(0);
-			keyterms.add(verb);
+			keyterms_nlp_verb.add(new Keyterm(question.substring(
+					entry.getKey(), entry.getValue())));
 		}
 		entrySet = nounSpans.entrySet();
 		for (Entry<Integer, Integer> entry : entrySet) {
@@ -131,11 +130,8 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			for (int j = 0; j < keyterms_nlp_noun.size(); j++) {
 				String nlp = keyterms_nlp_noun.get(j).toString();
 				if (containFullString(hmm, nlp)) {
-					if (!containKeyterm(keyterms, new Keyterm(hmm))) {
-						Keyterm key_hmm = new Keyterm(hmm);
-						key_hmm.setProbablity(1);
-						keyterms.add(key_hmm);
-					}
+					if (!containKeyterm(keyterms, new Keyterm(hmm)))
+						keyterms.add(new Keyterm(hmm));
 					keyterms_nlp_noun.remove(j);
 					j--;
 				}
@@ -148,50 +144,48 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 				String hmm = keyterms_hmm.get(j).toString();
 				if (nlp.contains(hmm)) {
 					if (containFullString(nlp, hmm)) {
-						if (!containKeyterm(keyterms, new Keyterm(nlp))) {
-							Keyterm key_nlp=new Keyterm(nlp);
-							key_nlp.setProbablity(0);
-							keyterms.add(key_nlp);
+						if (!containKeyterm(keyterms, new Keyterm(nlp)))
+							keyterms.add(new Keyterm(nlp));
+						if (!containKeyterm(keyterms, new Keyterm(hmm))){
+						  Keyterm temp = new Keyterm(hmm);
+						  temp.setProbablity(1);
+							keyterms.add(temp);
 						}
-						if (!containKeyterm(keyterms, new Keyterm(hmm))) {
-							Keyterm key_hmm=new Keyterm(hmm);
-							key_hmm.setProbablity(1);
-							keyterms.add(key_hmm);
-						}
-						String temp = nlp.replace(hmm, "");
-						if (!containKeyterm(keyterms, new Keyterm(temp.trim()))) {
-							Keyterm key_temp = new Keyterm(temp.trim());
-							key_temp.setProbablity(0);
-							keyterms.add(key_temp);
-						}
+						String temp = nlp.replace(hmm+" ", "");
+						//TODO @Shirley replace should add a " " or it gives double spaces
+						if (!containKeyterm(keyterms, new Keyterm(temp.trim())))
+							keyterms.add(new Keyterm(temp.trim()));
 					} else {
-						if (!containKeyterm(keyterms, new Keyterm(nlp))) {
-							Keyterm key_hybrid=new Keyterm(nlp);
-							key_hybrid.setProbablity(1);
-							keyterms.add(key_hybrid);
-						}
+						if (!containKeyterm(keyterms, new Keyterm(nlp)))
+							keyterms.add(new Keyterm(nlp));
 					}
 				}
 			}
 		}
 
+		Iterator<Keyterm> iter = keyterms_nlp_verb.iterator();
+		while (iter.hasNext()) {
+		  Keyterm temp = iter.next();
+			keyterms.add(temp);
+		}
+		
 		// compare with gs
 		try {
 			// Create file
-			FileWriter fstream = new FileWriter("out.txt", true);
-			BufferedWriter out = new BufferedWriter(fstream);
-
-			Iterator<Keyterm> iter = keyterms.iterator();
+			 FileWriter fstream = new FileWriter("out.txt", true);
+			 BufferedWriter out = new BufferedWriter(fstream);
+			iter = keyterms.iterator();
 			while (iter.hasNext()) {
 				String keyterm = iter.next().toString();
 				out.append(keyterm + ", ");
 			}
 			out.append("\n");
-			// Close the output stream
+			//Close the output stream
 			out.close();
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
+		
 		return keyterms;
 	}
 }
