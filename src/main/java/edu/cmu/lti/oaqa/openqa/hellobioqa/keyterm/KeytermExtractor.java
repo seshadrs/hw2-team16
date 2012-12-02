@@ -94,7 +94,6 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		List<Keyterm> keyterms_nlp_noun = new ArrayList<Keyterm>();
 		List<Keyterm> keyterms = new ArrayList<Keyterm>();
 
-		question = "How do  mutations in the Pes gene affect cell growth?";
 		String[] questions = question.split("\\(|\\)");
 
 		// Stanford NLP extracts verbs and general nouns
@@ -174,6 +173,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 							keyterms.add(key_temp);
 						}
 					} else {
+						// Identical
 						if (!containKeyterm(keyterms, new Keyterm(nlp))) {
 							Keyterm key_hybrid = new Keyterm(nlp);
 							key_hybrid.setProbablity(1);
@@ -181,6 +181,12 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 						}
 					}
 				}
+			}
+			if (!containKeyterm(keyterms, new Keyterm(nlp))) {
+				// non-relevant
+				Keyterm key_nonrelevant = new Keyterm(nlp);
+				key_nonrelevant.setProbablity(0);
+				keyterms.add(key_nonrelevant);
 			}
 		}
 
