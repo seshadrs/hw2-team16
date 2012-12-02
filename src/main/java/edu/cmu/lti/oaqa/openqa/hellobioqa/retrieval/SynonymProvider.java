@@ -10,6 +10,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.cmu.lti.oaqa.framework.data.Keyterm;
+
 /**
  * @author mingtaozhang
  * 
@@ -18,6 +20,10 @@ public class SynonymProvider {
 
   final static String link = "http://words.bighugelabs.com/api/2/617c51f37fdfd2744d58884123d4bc6c/";
 
+  public static String reformWithSynonym(List<Keyterm> keyterms, String query){
+    return null;
+  }
+  
   public static List<String> getSynonyms(String word, int n) {
     List<String> result = new ArrayList<String>();
     try {

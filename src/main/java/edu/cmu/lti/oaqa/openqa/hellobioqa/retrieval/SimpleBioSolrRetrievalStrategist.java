@@ -162,12 +162,21 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
       SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
-      // count the number of results
       if(docs.size() < this.minimumResult){
         // do gene generalization
         String newQuery = GeneGeneralizor.generalizeGene(this.keyterms, query);
         docs = wrapper.runQuery(newQuery, hitListSize);
-      } 
+      }
+      if(docs.size() < this.minimumResult){
+        // do synonym expansion 
+        String newQuery = SynonymProvider.reformWithSynonym(this.keyterms, query);
+        docs = wrapper.runQuery(newQuery, hitListSize);
+      }
+      if(docs.size() < this.minimumResult){
+        // do AND -> OR replace 
+        String newQuery = OperatorSpecialist.changeOperator(query);
+        docs = wrapper.runQuery(newQuery, hitListSize);
+      }
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
                 (Float) doc.getFieldValue("score"), query);

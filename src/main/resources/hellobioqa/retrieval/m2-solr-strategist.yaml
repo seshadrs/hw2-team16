@@ -3,7 +3,7 @@ cross-opts:
   hit-list-size: [50]
   singleWordWeight: [1f]
   nearWeight: [0.2f]
-  geneWeight: [10f]
+  geneWeight: [1.1f]
   dependencyLength: [50]
   threshold: [0f]
   synonymWeight: [0.5f]
