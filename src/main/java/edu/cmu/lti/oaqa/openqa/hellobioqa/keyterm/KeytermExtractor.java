@@ -29,10 +29,10 @@ import java.util.Set;
 import org.apache.uima.UimaContext;
 import org.apache.uima.resource.ResourceInitializationException;
 
-
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunker;
 import com.aliasi.chunk.Chunking;
+import com.aliasi.chunk.ConfidenceChunker;
 import com.aliasi.util.AbstractExternalizable;
 
 import edu.cmu.lti.oaqa.cse.basephase.keyterm.AbstractKeytermExtractor;
@@ -43,6 +43,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 	private PosTagNamedEntityRecognizer posTagNER;
 	private Chunker chunker_token;
 	private Chunker chunker_hmm;
+	ConfidenceChunker chunker;
 
 	@Override
 	public void initialize(UimaContext aContext)
@@ -93,6 +94,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		List<Keyterm> keyterms_nlp_noun = new ArrayList<Keyterm>();
 		List<Keyterm> keyterms = new ArrayList<Keyterm>();
 
+		question = "How do  mutations in the Pes gene affect cell growth?";
 		String[] questions = question.split("\\(|\\)");
 
 		// Stanford NLP extracts verbs and general nouns
@@ -112,8 +114,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			keyterms_nlp_noun.add(new Keyterm(question.substring(
 					entry.getKey(), entry.getValue())));
 		}
-		//LingPipe Test
-		
+
 		// LingPipe NER
 		for (int i = 0; i < questions.length; i++) {
 			Chunking chunking = chunker_token.chunk(questions[i]);
