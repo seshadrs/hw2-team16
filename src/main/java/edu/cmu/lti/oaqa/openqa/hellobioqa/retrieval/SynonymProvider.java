@@ -20,11 +20,18 @@ public class SynonymProvider {
 
   final static String link = "http://words.bighugelabs.com/api/2/617c51f37fdfd2744d58884123d4bc6c/";
 
-  public static String reformWithSynonym(List<Keyterm> keyterms, String query){
-    return null;
+  int offset = 0;
+  
+  public String reformWithSynonym(List<Keyterm> keyterms, String query){
+    List<String> temp = getSynonyms(keyterms.get(offset).getText(), 1);
+    if(temp != null){
+        query = query.replace(keyterms.get(offset).getText(), temp.get(0));
+    }
+    offset++;
+    return query;
   }
   
-  public static List<String> getSynonyms(String word, int n) {
+  public List<String> getSynonyms(String word, int n) {
     List<String> result = new ArrayList<String>();
     try {
       URL url = new URL(link + word + "/");
@@ -43,7 +50,7 @@ public class SynonymProvider {
   }
 
   public static void main(String[] args) {
-    System.out.println(getSynonyms("Parkinson's disease", 2));
-    System.out.println(getSynonyms("Nurr-77", 2));
+    System.out.println(new SynonymProvider().getSynonyms("Parkinson's disease", 2));
+    System.out.println(new SynonymProvider().getSynonyms("Nurr-77", 2));
   }
 }

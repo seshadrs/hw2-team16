@@ -162,20 +162,33 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
       SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
+      /*
       if(docs.size() < this.minimumResult){
         // do gene generalization
         String newQuery = GeneGeneralizor.generalizeGene(this.keyterms, query);
-        docs = wrapper.runQuery(newQuery, hitListSize);
+        query = newQuery;
+        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        temp++;
       }
-      if(docs.size() < this.minimumResult){
+      */
+      int temp = 0;
+      SynonymProvider syn = new SynonymProvider();
+      while(docs.size() < this.minimumResult && temp < 4){
         // do synonym expansion 
-        String newQuery = SynonymProvider.reformWithSynonym(this.keyterms, query);
-        docs = wrapper.runQuery(newQuery, hitListSize);
+        String newQuery = syn.reformWithSynonym(this.keyterms, query);
+        query = newQuery;
+        System.out.println(newQuery);
+        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        temp++;
       }
-      if(docs.size() < this.minimumResult){
+      temp = 0;
+      while(docs.size() < this.minimumResult && temp < 2){
         // do AND -> OR replace 
         String newQuery = OperatorSpecialist.changeOperator(query);
-        docs = wrapper.runQuery(newQuery, hitListSize);
+        query = newQuery;
+        System.out.println(newQuery);
+        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        temp ++;
       }
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
