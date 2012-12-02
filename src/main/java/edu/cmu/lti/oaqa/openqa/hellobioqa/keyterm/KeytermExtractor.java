@@ -32,6 +32,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunker;
 import com.aliasi.chunk.Chunking;
+import com.aliasi.chunk.ConfidenceChunker;
 import com.aliasi.util.AbstractExternalizable;
 
 import edu.cmu.lti.oaqa.cse.basephase.keyterm.AbstractKeytermExtractor;
@@ -42,6 +43,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 	private PosTagNamedEntityRecognizer posTagNER;
 	private Chunker chunker_token;
 	private Chunker chunker_hmm;
+	ConfidenceChunker chunker;
 
 	@Override
 	public void initialize(UimaContext aContext)
@@ -71,28 +73,33 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 	}
 
 	private boolean containFullString(String big, String small) {
-		String[] tokens = big.split(" ");
-		if (tokens.length > 1) {
-			for (int i = 0; i < tokens.length; i++) {
-				if (tokens[i].equals(small))
-					return true;
+		if (big.contains(small) && !big.equals(small)) {
+			int firstindex = big.indexOf(small);
+			int afterindex = firstindex + small.length();
+			if (firstindex != 0 && big.charAt(firstindex - 1) != ' ') {
+				return false;
 			}
+			if (afterindex != big.length() - 1 && big.charAt(afterindex) != ' ') {
+				return false;
+			}
+			return true;
+		} else {
+			return false;
 		}
-		return false;
 	}
 
 	@Override
 	protected List<Keyterm> getKeyterms(String question) {
 		List<Keyterm> keyterms_hmm = new ArrayList<Keyterm>();
-		List<Keyterm> keyterms = new ArrayList<Keyterm>();
 		List<Keyterm> keyterms_nlp_noun = new ArrayList<Keyterm>();
+		List<Keyterm> keyterms = new ArrayList<Keyterm>();
 
 		String[] questions = question.split("\\(|\\)");
 
-		// Stanford NLP
-
+		// Stanford NLP extracts verbs and general nouns
 		Map<Integer, Integer> verbSpans = posTagNER.getVerbSpans(question);
 		Map<Integer, Integer> nounSpans = posTagNER.getNounSpans(question);
+		// Verb section
 		Set<Entry<Integer, Integer>> entrySet = verbSpans.entrySet();
 		for (Entry<Integer, Integer> entry : entrySet) {
 			Keyterm verb = new Keyterm(question.substring(entry.getKey(),
@@ -100,6 +107,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			verb.setProbablity(0);
 			keyterms.add(verb);
 		}
+		// Noun section
 		entrySet = nounSpans.entrySet();
 		for (Entry<Integer, Integer> entry : entrySet) {
 			keyterms_nlp_noun.add(new Keyterm(question.substring(
@@ -149,12 +157,12 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 				if (nlp.contains(hmm)) {
 					if (containFullString(nlp, hmm)) {
 						if (!containKeyterm(keyterms, new Keyterm(nlp))) {
-							Keyterm key_nlp=new Keyterm(nlp);
+							Keyterm key_nlp = new Keyterm(nlp);
 							key_nlp.setProbablity(0);
 							keyterms.add(key_nlp);
 						}
 						if (!containKeyterm(keyterms, new Keyterm(hmm))) {
-							Keyterm key_hmm=new Keyterm(hmm);
+							Keyterm key_hmm = new Keyterm(hmm);
 							key_hmm.setProbablity(1);
 							keyterms.add(key_hmm);
 						}
@@ -165,13 +173,20 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 							keyterms.add(key_temp);
 						}
 					} else {
+						// Identical
 						if (!containKeyterm(keyterms, new Keyterm(nlp))) {
-							Keyterm key_hybrid=new Keyterm(nlp);
+							Keyterm key_hybrid = new Keyterm(nlp);
 							key_hybrid.setProbablity(1);
 							keyterms.add(key_hybrid);
 						}
 					}
 				}
+			}
+			if (!containKeyterm(keyterms, new Keyterm(nlp))) {
+				// non-relevant
+				Keyterm key_nonrelevant = new Keyterm(nlp);
+				key_nonrelevant.setProbablity(0);
+				keyterms.add(key_nonrelevant);
 			}
 		}
 
