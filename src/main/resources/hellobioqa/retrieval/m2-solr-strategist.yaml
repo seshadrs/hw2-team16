@@ -6,8 +6,8 @@ cross-opts:
   geneWeight: [10f]
   dependencyLength: [50]
   threshold: [0f]
-  synonymWeight: [0.2f]
-  numberOfSynonym: [1]
+  synonymWeight: [0.5f]
+  numberOfSynonym: [2]
 server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
 port: 9080
 

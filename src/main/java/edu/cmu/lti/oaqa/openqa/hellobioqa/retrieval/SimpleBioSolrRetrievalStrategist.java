@@ -25,10 +25,10 @@ import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.resource.ResourceInitializationException;
 
+import edu.cmu.lti.oaqa.core.provider.solr.SolrWrapper;
 import edu.cmu.lti.oaqa.cse.basephase.retrieval.AbstractRetrievalStrategist;
 import edu.cmu.lti.oaqa.framework.data.Keyterm;
 import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
-import edu.cmu.lti.oaqa.openqa.hellobioqa.inhancement.SynonymProvider;
 
 /**
  * 
@@ -37,6 +37,8 @@ import edu.cmu.lti.oaqa.openqa.hellobioqa.inhancement.SynonymProvider;
  */
 public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategist {
 
+  private List<Keyterm> keyterms;
+  
   protected int hitListSize;
 
   protected double singleWordWeight;
@@ -49,9 +51,13 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   
   protected double threshold;
   
+  protected int minimumResult = 3;
+  
   protected double synonymWeight;
 
   protected int dependencyLength;
+  
+  protected String operator = "AND";
   
   protected SolrWrapper wrapper;
   
@@ -122,15 +128,10 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
 
   @Override
   protected final List<RetrievalResult> retrieveDocuments(String questionText,
-          List<Keyterm> keyterms) {    
+          List<Keyterm> keyterms) {
+    this.keyterms = keyterms; // for gene generalization purpose
     String query = formulateQuery(keyterms);
-    // query = query + " " + queryFromQuestion(questionText);
-    System.out.println("Query: " + query);
     return retrieveDocuments(query);
-  }
-
-  private String queryFromQuestion(String questionText) {
-    return questionText.replace("?", "");
   }
 
   protected String formulateQuery(List<Keyterm> keyterms) {
@@ -139,108 +140,34 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       if(term.getProbability() == 0){
         // not a gene
         if(term.getText().contains(" ")){
-          result.append("\"" + term.getText() + "\" AND ");
+          result.append("\"" + term.getText() + "\" "+operator+" ");
         } else {
-          result.append(term.getText() + "^" + singleWordWeight + " AND ");
+          result.append(term.getText() + "^" + singleWordWeight + " "+operator+" ");
         }
       } else {
         // is a gene
         if(term.getText().contains(" ")){
-          result.append("\"" + term.getText() + "\"^" + geneWeight + " AND ");
+          result.append("\"" + term.getText() + "\"^" + geneWeight + " "+operator+" ");
         } else {
-          result.append(term.getText() + "^" + geneWeight + " AND ");
+          result.append(term.getText() + "^" + geneWeight + " "+operator+" ");
         }
       }
     }
-    /*
-    for (Keyterm keyterm : keyterms) {
-      String temp = keyterm.getText();
-      List<String> t = SynonymProvider.getSynonyms(keyterm.getText(), numberOfSynonym);
-      if(t != null && temp.contains(" ")) {//TODO
-        result.append("(");
-        for(String syn: t){
-          if (syn.contains(" ")) {
-            result.append(near(syn) + "^"+nearWeight+" AND ");
-            result.append(and(syn) + " AND ");
-          } else {
-            result.append(syn + "^"+singleWordWeight+" AND ");
-          }
-        }
-        result.delete(result.length() - 5, result.length());
-        result.append(")^"+synonymWeight+" AND ");
-      }
-      if (temp.contains(" ")) {
-        result.append(near(temp) + "^"+nearWeight+" AND ");
-        result.append(and(temp) + " AND ");
-      } else {
-        result.append(temp + "^"+singleWordWeight+" AND ");
-      }
-    }
-    */
     String query = result.toString().trim();
-    query = query.substring(0, query.length() - 4);
+    query = query.substring(0, query.length() - operator.length() + 1);
     return query;
   }
-
-  /*
-  private String near(String relatedTerms) {
-    StringBuilder result = new StringBuilder();
-    String[] terms = relatedTerms.split(" ");
-    int step = 2;
-    while (step <= terms.length) {
-      String[] temp = new String[terms.length - step + 1];
-      for (int i = 0; i < temp.length ; i++) {
-        temp[i] = "";
-      }
-      for (int j = 0; j < terms.length - step + 1; j++) {
-        for (int i = 0; i < terms.length; i++) {
-          if (i >= j && i < j + step) {
-            temp[j] = temp[j] + terms[i]+" ";
-          }
-        }
-      }
-      for (String t : temp) {
-        t = "\"" + t.trim() + "\"~" + dependencyLength * (step - 1) + " OR ";
-        result.append(t);
-      }
-      step++;
-    }
-    String temp = result.toString().trim();
-    return "("+temp.substring(0, temp.length() - 3)+")";
-  }
-  
-  private String and(String relatedTerms) {
-    StringBuilder result = new StringBuilder();
-    String[] terms = relatedTerms.split(" ");
-    int step = 2;
-    while (step <= terms.length) {
-      String[] temp = new String[terms.length - step + 1];
-      for (int i = 0; i < temp.length ; i++) {
-        temp[i] = "";
-      }
-      for (int j = 0; j < terms.length - step + 1; j++) {
-        for (int i = 0; i < terms.length; i++) {
-          if (i >= j && i < j + step) {
-            temp[j] = temp[j] + terms[i] + " AND ";
-          }
-        }
-      }
-      for (String t : temp) {
-        String tem = t.trim();
-        t = "("+ tem.substring(0, tem.length() - 4)+ ") OR ";
-        result.append(t);
-      }
-      step++;
-    }
-    String temp = result.toString().trim();
-    return "("+temp.substring(0, temp.length() - 3)+")";
-  }
-  */
 
   private List<RetrievalResult> retrieveDocuments(String query) {
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
       SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
+      // count the number of results
+      if(docs.size() < this.minimumResult){
+        // do gene generalization
+        String newQuery = GeneGeneralizor.generalizeGene(this.keyterms, query);
+        docs = wrapper.runQuery(newQuery, hitListSize);
+      } 
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
                 (Float) doc.getFieldValue("score"), query);

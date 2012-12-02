@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.cmu.lti.oaqa.openqa.hellobioqa.inhancement;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -37,6 +37,7 @@ public class SynonymProvider {
   }
 
   public static void main(String[] args) {
-    System.out.println(getSynonyms("Parkinson disease", 2));
+    System.out.println(getSynonyms("Parkinson's disease", 2));
+    System.out.println(getSynonyms("Nurr-77", 2));
   }
 }
