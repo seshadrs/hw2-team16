@@ -162,8 +162,9 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
       SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
+      int temp = 0;
       /*
-      if(docs.size() < this.minimumResult){
+      if(docs.size() < this.minimumResult && temp < 4 && temp < keyterms.size() - 1){
         // do gene generalization
         String newQuery = GeneGeneralizor.generalizeGene(this.keyterms, query);
         query = newQuery;
@@ -171,9 +172,9 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
         temp++;
       }
       */
-      int temp = 0;
+      temp = 0;
       SynonymProvider syn = new SynonymProvider();
-      while(docs.size() < this.minimumResult && temp < 4){
+      while(docs.size() < this.minimumResult && temp < 4 && temp < keyterms.size() - 1){
         // do synonym expansion 
         String newQuery = syn.reformWithSynonym(this.keyterms, query);
         query = newQuery;
@@ -182,13 +183,13 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
         temp++;
       }
       temp = 0;
-      while(docs.size() < this.minimumResult && temp < 2){
+      while(docs.size() < this.minimumResult && temp < 2 && temp < keyterms.size() - 1){
         // do AND -> OR replace 
         String newQuery = OperatorSpecialist.changeOperator(query);
         query = newQuery;
         System.out.println(newQuery);
         docs.addAll(wrapper.runQuery(newQuery, hitListSize));
-        temp ++;
+        temp++;
       }
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
@@ -199,6 +200,7 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
         System.out.println(doc.getFieldValue("id"));
       }
     } catch (Exception e) {
+      e.printStackTrace();
       System.err.println("Error retrieving documents from Solr: " + e);
     }
     return result;
