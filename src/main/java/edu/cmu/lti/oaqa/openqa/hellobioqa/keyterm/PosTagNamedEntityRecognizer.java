@@ -34,6 +34,7 @@ public class PosTagNamedEntityRecognizer {
 		candidate.clear();
 	}
 
+	// Get Verb From Question
 	public Map<Integer, Integer> getVerbSpans(String text) {
 		Map<Integer, Integer> begin2end = new HashMap<Integer, Integer>();
 		Annotation document = new Annotation(text);
@@ -44,9 +45,8 @@ public class PosTagNamedEntityRecognizer {
 			for (int i = 0; i < tokenList.size(); i++) {
 				CoreLabel token = tokenList.get(i);
 				CoreLabel token_last = null;
-				if (i > 0) {
+				if (i > 0)
 					token_last = tokenList.get(i - 1);
-				}
 				String pos = token.get(PartOfSpeechAnnotation.class);
 				if (pos.startsWith("VB")
 						&& i > 0
@@ -63,6 +63,7 @@ public class PosTagNamedEntityRecognizer {
 		return begin2end;
 	}
 
+	// Get Noun From Question
 	public Map<Integer, Integer> getNounSpans(String text) {
 		Map<Integer, Integer> begin2end = new HashMap<Integer, Integer>();
 		Annotation document = new Annotation(text);
@@ -70,14 +71,34 @@ public class PosTagNamedEntityRecognizer {
 		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 		for (CoreMap sentence : sentences) {
 			List<CoreLabel> candidate = new ArrayList<CoreLabel>();
-			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+			List<CoreLabel> tokenList = sentence.get(TokensAnnotation.class);
+			for (int i = 0; i < tokenList.size(); i++) {
+				CoreLabel token = tokenList.get(i);
+				CoreLabel token_last = null;
+				CoreLabel token_next = null;
+				if (i > 0)
+					token_last = tokenList.get(i - 1);
+				if (i < token.size() - 1)
+					token_next = tokenList.get(i + 1);
 				String pos = token.get(PartOfSpeechAnnotation.class);
 				if (pos.startsWith("JJ") || pos.equals("VBG")) {
-					if (candidate.size() > 0)
-						addToMap(candidate, begin2end);
+					if (candidate.size() > 0) {
+						if (i > 0
+								&& !token_last
+										.get(PartOfSpeechAnnotation.class)
+										.startsWith("JJ"))
+							addToMap(candidate, begin2end);
+					}
 					candidate.add(token);
 				} else if (pos.startsWith("NN")) {
-					candidate.add(token);
+					if (i > 0
+							&& i < tokenList.size() - 1
+							&& token_last.get(PartOfSpeechAnnotation.class)
+									.equals("DT")
+							&& token_next.get(PartOfSpeechAnnotation.class)
+									.equals("IN")) {
+					} else
+						candidate.add(token);
 				} else if (candidate.size() > 0) {
 					if (pos.equals("POS")) {
 						if (sentence
