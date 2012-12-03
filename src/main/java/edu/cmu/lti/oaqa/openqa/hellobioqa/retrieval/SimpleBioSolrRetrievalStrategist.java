@@ -51,7 +51,7 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   
   protected double threshold;
   
-  protected int minimumResult = 3;
+  protected int minimumResult = 10;
   
   protected double synonymWeight;
 
@@ -154,40 +154,42 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       }
     }
     String query = result.toString().trim();
-    query = query.substring(0, query.length() - operator.length() + 1);
+    query = query.substring(0, query.length() - operator.length() - 2);
     return query;
   }
 
   private List<RetrievalResult> retrieveDocuments(String query) {
+    System.out.println(query);
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
       SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
       int temp = 0;
-      /*
-      if(docs.size() < this.minimumResult && temp < 4 && temp < keyterms.size() - 1){
-        // do gene generalization
-        String newQuery = GeneGeneralizor.generalizeGene(this.keyterms, query);
-        query = newQuery;
-        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
-        temp++;
-      }
-      */
-      temp = 0;
       SynonymProvider syn = new SynonymProvider();
-      while(docs.size() < this.minimumResult && temp < 4 && temp < keyterms.size() - 1){
+      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
         // do synonym expansion 
         String newQuery = syn.reformWithSynonym(this.keyterms, query);
         query = newQuery;
-        System.out.println(newQuery);
+        System.out.println(query);
+        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        temp++;
+      }      
+      temp = 0;
+      GeneGeneralizor geneGen = new GeneGeneralizor();
+      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
+        // do gene generalization
+        String newQuery = geneGen.generalizeGene(this.keyterms, query);
+        query = newQuery;
+        System.out.println(query);
         docs.addAll(wrapper.runQuery(newQuery, hitListSize));
         temp++;
       }
+      
       temp = 0;
-      while(docs.size() < this.minimumResult && temp < 2 && temp < keyterms.size() - 1){
+      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
         // do AND -> OR replace 
         String newQuery = OperatorSpecialist.changeOperator(query);
         query = newQuery;
-        System.out.println(newQuery);
+        System.out.println(query);
         docs.addAll(wrapper.runQuery(newQuery, hitListSize));
         temp++;
       }

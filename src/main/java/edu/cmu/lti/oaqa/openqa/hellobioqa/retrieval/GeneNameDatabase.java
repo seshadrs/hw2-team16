@@ -8,9 +8,9 @@ import java.util.HashMap;
 
 
 public class GeneNameDatabase {
-  private HashMap<String,Gene> hashedDatabase = new HashMap<String,Gene>();
-  private HashMap<String,Gene> synonymDatabase = new HashMap<String,Gene>();
-  public GeneNameDatabase(){
+  public static HashMap<String,Gene> hashedDatabase = new HashMap<String,Gene>();
+  public static HashMap<String,Gene> synonymDatabase = new HashMap<String,Gene>();
+  static {
     File databaseFile = new File("geneDatabase.txt");
     try {
       BufferedReader databaseReader = new BufferedReader(new FileReader(databaseFile));
@@ -38,12 +38,11 @@ public class GeneNameDatabase {
         for (String synonym : synonymList){
           if (synonym.equals(""))
             continue;
-          if (synonymDatabase.containsKey(synonym))
-            System.out.println(synonym);
-          else
+          if (!synonymDatabase.containsKey(synonym))
             synonymDatabase.put(synonym, gene);
         }
       }
+      databaseReader.close();
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -53,17 +52,11 @@ public class GeneNameDatabase {
     }
   }
   
-  public Gene getGene(String name){
+  public static Gene getGene(String name){
     if (hashedDatabase.containsKey(name))
       return hashedDatabase.get(name);
     if (synonymDatabase.containsKey(name))
       return synonymDatabase.get(name);
     return null;
-  }
-  
-  
-  public static void main(String[] args){
-    GeneNameDatabase database = new GeneNameDatabase();
-    Gene gene = database.getGene("");
   }
 }

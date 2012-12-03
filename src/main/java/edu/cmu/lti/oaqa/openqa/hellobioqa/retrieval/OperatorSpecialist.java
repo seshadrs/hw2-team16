@@ -9,7 +9,7 @@ package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
  */
 public class OperatorSpecialist {
   public static String changeOperator(String query){
-    query = query.replace("AND", "OR");
+    query = query.replaceFirst("AND", "OR");
     return query;
   }
 }

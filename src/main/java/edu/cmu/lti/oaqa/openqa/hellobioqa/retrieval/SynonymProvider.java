@@ -25,7 +25,7 @@ public class SynonymProvider {
   public String reformWithSynonym(List<Keyterm> keyterms, String query){
     List<String> temp = getSynonyms(keyterms.get(offset).getText(), 1);
     if(temp != null){
-        query = query.replace(keyterms.get(offset).getText(), temp.get(0));
+        query = query.replaceFirst(keyterms.get(offset).getText(), temp.get(0));
     }
     offset++;
     return query;
