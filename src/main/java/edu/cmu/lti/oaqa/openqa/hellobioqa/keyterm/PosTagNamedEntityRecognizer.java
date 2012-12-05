@@ -78,7 +78,7 @@ public class PosTagNamedEntityRecognizer {
 				CoreLabel token_next = null;
 				if (i > 0)
 					token_last = tokenList.get(i - 1);
-				if (i < token.size() - 1)
+				if (i < tokenList.size() - 1)
 					token_next = tokenList.get(i + 1);
 				String pos = token.get(PartOfSpeechAnnotation.class);
 				if (pos.startsWith("JJ") || pos.equals("VBG")) {
