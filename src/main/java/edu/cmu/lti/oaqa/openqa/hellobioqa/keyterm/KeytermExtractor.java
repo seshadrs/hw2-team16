@@ -79,7 +79,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			if (firstindex != 0 && big.charAt(firstindex - 1) != ' ') {
 				return false;
 			}
-			if (afterindex != big.length() - 1 && big.charAt(afterindex) != ' ') {
+			if (afterindex != big.length() && big.charAt(afterindex) != ' ') {
 				return false;
 			}
 			return true;
