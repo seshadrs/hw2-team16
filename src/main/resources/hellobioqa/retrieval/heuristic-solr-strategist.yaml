@@ -1,6 +1,6 @@
 class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.HeuristicSolrRetrievalStrategist
 cross-opts:
-  hit-list-size: [30]
+  hit-list-size: [50]
   singleWordWeight: [0.8f]
   geneWeight: [1.2f]
 server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
