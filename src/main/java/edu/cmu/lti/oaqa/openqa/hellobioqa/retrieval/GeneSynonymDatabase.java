@@ -9,9 +9,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class GeneNameDatabase {
+/**
+ * 
+ * 
+ * @author team16
+ *
+ */
+public class GeneSynonymDatabase {
+  /**
+   * given a gene, return a list of synonym genes related to it (not containt the gene itself)
+   * 
+   */
   private static HashMap<String, List<String>> hashedDatabase = new HashMap<String, List<String>>();
 
+  /**
+   * the static constructor, which used to ensure the txt data only being accessed once 
+   * 
+   */
   static {
     File databaseFile = new File("geneDatabase.txt");
     try {
@@ -148,14 +162,14 @@ public class GeneNameDatabase {
     }
   }
   
+  /**
+   * searchGeneSynonyms provide you all the gene synonyms given a gene
+   * 
+   * @param gene
+   * @return
+   */
   public static List<String> searchGeneSynonyms(String gene){
     List<String> result = hashedDatabase.get(gene);
     return result;
-  }
-
-  public static void main(String[] args) {
-    GeneNameDatabase database = new GeneNameDatabase();
-    List<String> result = database.searchGeneSynonyms("askjdlskdaj");
-    System.out.println(result);
   }
 }

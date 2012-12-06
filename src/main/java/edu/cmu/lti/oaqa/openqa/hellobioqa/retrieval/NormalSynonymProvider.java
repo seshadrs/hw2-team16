@@ -3,12 +3,8 @@
  */
 package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +18,25 @@ import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 
 /**
- * @author mingtaozhang
+ * @author team16
  * 
  */
-public class SynonymProvider {
+public class NormalSynonymProvider {
+  /**
+   * offset is used to track which word in the keyterm list should be
+   * take to change the query. It increases every time the reformWithSynonym 
+   * method is being called.
+   */
+  private int offset = 0;
 
-  int offset = 0;
-
+  /**
+   * 
+   * 
+   * 
+   * @param keyterms
+   * @param query
+   * @return
+   */
   public String reformWithSynonym(List<Keyterm> keyterms, String query) {
     List<String> syns = getSynonyms(keyterms.get(offset).getText(), 3);
     if (syns != null) {
@@ -45,6 +53,14 @@ public class SynonymProvider {
     return query;
   }
   
+  /**
+   * this is similar to reformWithSynonym, but we add the original word back to form
+   * a complete query expansion.
+   * 
+   * @param keyterms
+   * @param query
+   * @return
+   */
   public String reformWithSynonymForOR(List<Keyterm> keyterms, String query) {
     List<String> syns = getSynonyms(keyterms.get(offset).getText(), 3);
     if (syns != null) {
@@ -62,6 +78,17 @@ public class SynonymProvider {
     return query;
   }
 
+  /**
+   * 
+   * getSynonyms will return you a list of synonyms give the word and the maxmum
+   * number of synonyms you want.
+   * 
+   * Special: synCount = 0 will return everything it finds out.
+   * 
+   * @param originalWord
+   * @param synCount
+   * @return
+   */
   private static List<String> getSynonyms(String originalWord, int synCount) {
     URL url = null;
     List<String> synList = new ArrayList<String>();
@@ -81,8 +108,7 @@ public class SynonymProvider {
       IWord word = dict.getWord(wordID);
       ISynset synset = word.getSynset();
       for (IWord w : synset.getWords()) {
-        // replace "_" with ""
-        String synonym = w.getLemma().replaceAll("_", " ");
+        String synonym = w.getLemma().replaceAll("_", " "); // replace "_" with ""
         synList.add(synonym);
         count++;
         if(count == synCount)

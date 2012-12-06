@@ -9,17 +9,18 @@ import java.util.List;
 import edu.cmu.lti.oaqa.framework.data.Keyterm;
 
 /**
- * @author mingtaozhang
- * generalize gene
- * Nurr-77 => "Orphan nuclear receptor"
- * //TODO gene generalization
-  // return "\"Parkinson\'s disease\" AND \"Orphan nuclear receptor\""; // 164
-  // return "(Cathepsin D OR (CTSD)) AND (apolipoprotein OR E (ApoE)) AND contribute AND Alzheimer's disease"; // 165
-  // return "(\"nucleoside diphosphate kinase\" OR NM23) AND \"tumor\""; // 167
-  // return "COP2 OR contribute OR CFTR AND \"endoplasmic reticulum\""; // 170 
+ * @author team16
+ * this class generate gene synonyms by talking with a gene database 
+ *   
  */
-public class GeneGeneralizor {
-  int offset = 0;
+public class GeneSynonymGenerator {
+  /**
+   * offset is used to track which word in the keyterm list should be
+   * take to change the query. It increases every time the generalizeGene 
+   * method is being called.
+   */
+  private int offset = 0;
+  
   public String generalizeGene(List<Keyterm> keyterms, String query){
     while(offset < keyterms.size() && keyterms.get(offset).getProbability() != 1){
       offset++;
@@ -40,6 +41,13 @@ public class GeneGeneralizor {
     return query;
   }
   
+  /**
+   * similar with the previous methods, but include the current keyterm
+   * 
+   * @param keyterms
+   * @param query
+   * @return
+   */
   public String generalizeGeneForOR(List<Keyterm> keyterms, String query){
     while(offset < keyterms.size() && keyterms.get(offset).getProbability() != 1){
       offset++;
@@ -61,9 +69,15 @@ public class GeneGeneralizor {
     return query;
   }
   
+  /**
+   * getGeneFamily will return a list of related genes given a gene
+   * 
+   * @param word
+   * @return
+   */
   public List<String> getGeneFamily(String word) {
     List<String> result = new ArrayList<String>();
-    List<String> geneSyn = GeneNameDatabase.searchGeneSynonyms(word);
+    List<String> geneSyn = GeneSynonymDatabase.searchGeneSynonyms(word);
     if(geneSyn == null) return null;
     for (String synonym : geneSyn){
       if (synonym.equals(""))

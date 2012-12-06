@@ -19,7 +19,7 @@ pipeline:
   - inherit: jdbc.sqlite.cse.phase 
     name: retrieval-strategist
     options: |
-      - inherit: hellobioqa.retrieval.m2-solr-strategist
+      - inherit: hellobioqa.retrieval.heuristic-solr-strategist
           
   - inherit: jdbc.sqlite.cse.phase  
     name: passage-extractor

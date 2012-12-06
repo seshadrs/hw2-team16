@@ -33,10 +33,11 @@ import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
 
 /**
  * 
- * @author Zi Yang <ziy@cs.cmu.edu>
+ * @author team16
  * 
+ * This class is designed to complete the retrieval process
  */
-public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategist {
+public class HeuristicSolrRetrievalStrategist extends AbstractRetrievalStrategist {
 
   private String dupQuery;
   
@@ -54,6 +55,10 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   
   protected double geneWeight; 
 
+  /**
+   * initialize this component
+   * 
+   */
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
@@ -88,6 +93,10 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     }
   }
 
+  /**
+   * retrievaDocument will call two sub methods to completet the retrieval process
+   * 
+   */
   @Override
   protected final List<RetrievalResult> retrieveDocuments(String questionText,
           List<Keyterm> keyterms) {
@@ -96,6 +105,19 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     return retrieveDocuments(query);
   }
 
+  /**
+   * form the orinal query by combining the keyterms.
+   * 
+   * If it's a gene, we add gene weight on the right
+   * If it's not a gene, we add normal weight on the right
+   * 
+   * We add "..phrase.." to combine a phrase tightly.
+   * 
+   * We add singleWordWeight to control the weihgt between single word and phrase
+   * 
+   * @param keyterms
+   * @return
+   */
   protected String formulateTheInitialQuery(List<Keyterm> keyterms) {
     StringBuffer result = new StringBuffer();
     for(Keyterm term : keyterms){
@@ -120,6 +142,15 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     return query;
   }
 
+  /**
+   * call the solr wrapper to execute the query
+   * 
+   * It prevent wasting searching resources by noting down duplicate queries.
+   * 
+   * @param query
+   * @param hitListSize
+   * @return
+   */
   private SolrDocumentList runQuery(String query, int hitListSize){
     if(this.dupQuery == null){
       this.dupQuery = query;
@@ -143,6 +174,17 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     return null;
   }  
   
+  /**
+   * retrieve Documnet will do 
+   * 1. synonym expansion
+   * 2. gene expansion
+   * 3. increase recall by changing AND to OR one by one.
+   * 
+   * It accumulates the results from the above 3 steps.
+   * 
+   * @param query
+   * @return
+   */
   private List<RetrievalResult> retrieveDocuments(String query) {
     String originalQuery = query;
     String newQuery = query;
@@ -150,7 +192,7 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     try {
       SolrDocumentList docs = runQuery(newQuery, hitListSize);
       int temp = 0;
-      SynonymProvider syn = new SynonymProvider();
+      NormalSynonymProvider syn = new NormalSynonymProvider();
       while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
         // do synonym expansion 
         newQuery = syn.reformWithSynonym(this.keyterms, originalQuery);
@@ -172,9 +214,9 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       // reset
       newQuery = originalQuery;
       temp = 0;
-      GeneGeneralizor geneGen = new GeneGeneralizor();
+      // do gene expansion
+      GeneSynonymGenerator geneGen = new GeneSynonymGenerator();
       while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
-        // do gene generalization
         newQuery = geneGen.generalizeGene(this.keyterms, originalQuery);
         SolrDocumentList tempDocs = runQuery(newQuery, hitListSize);
         SolrDocumentList duplicate = new SolrDocumentList();
@@ -193,13 +235,13 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       }
       // do the expansion and synonym
       temp = 0;
-      syn = new SynonymProvider();
+      syn = new NormalSynonymProvider();
       while(temp < keyterms.size() - 1){ 
         newQuery = syn.reformWithSynonymForOR(this.keyterms, newQuery);
         temp++;
       }
       temp = 0;
-      geneGen = new GeneGeneralizor();
+      geneGen = new GeneSynonymGenerator();
       while(temp < keyterms.size() - 1){
         newQuery = geneGen.generalizeGeneForOR(this.keyterms, newQuery);
         temp++;
@@ -246,6 +288,10 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     return result;
   }
 
+  /**
+   * fit into the framework
+   * 
+   */
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
     super.collectionProcessComplete();
