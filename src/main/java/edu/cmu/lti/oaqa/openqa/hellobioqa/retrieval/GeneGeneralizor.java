@@ -11,15 +11,15 @@ import edu.cmu.lti.oaqa.framework.data.Keyterm;
 /**
  * @author mingtaozhang
  * generalize gene
- * Nurr-77 => "Orphan nuclear receptor" 
- */
-public class GeneGeneralizor {
-  int offset = 0;
-  //TODO gene generalization
+ * Nurr-77 => "Orphan nuclear receptor"
+ * //TODO gene generalization
   // return "\"Parkinson\'s disease\" AND \"Orphan nuclear receptor\""; // 164
   // return "(Cathepsin D OR (CTSD)) AND (apolipoprotein OR E (ApoE)) AND contribute AND Alzheimer's disease"; // 165
   // return "(\"nucleoside diphosphate kinase\" OR NM23) AND \"tumor\""; // 167
-  // return "COP2 OR contribute OR CFTR AND \"endoplasmic reticulum\""; // 170
+  // return "COP2 OR contribute OR CFTR AND \"endoplasmic reticulum\""; // 170 
+ */
+public class GeneGeneralizor {
+  int offset = 0;
   public String generalizeGene(List<Keyterm> keyterms, String query){
     while(offset < keyterms.size() && keyterms.get(offset).getProbability() != 1){
       offset++;
@@ -42,12 +42,9 @@ public class GeneGeneralizor {
   
   public List<String> getGeneFamily(String word) {
     List<String> result = new ArrayList<String>();
-    Gene gene = GeneNameDatabase.getGene(word);
-    if(gene == null) return null;
-    String synonyms = gene.getSynonyms();
-    synonyms = synonyms.replaceAll("\"", "");
-    String[] synonymList = synonyms.split(", ");
-    for (String synonym : synonymList){
+    List<String> geneSyn = GeneNameDatabase.searchGeneSynonyms(word);
+    if(geneSyn == null) return null;
+    for (String synonym : geneSyn){
       if (synonym.equals(""))
         continue;
       result.add(synonym);
