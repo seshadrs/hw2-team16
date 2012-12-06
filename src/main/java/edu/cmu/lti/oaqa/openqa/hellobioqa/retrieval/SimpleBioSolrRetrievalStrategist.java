@@ -38,31 +38,21 @@ import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
  */
 public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategist {
 
+  private String dupQuery;
+  
+  protected int minimumResult;
+  
   private List<Keyterm> keyterms;
-  
-  protected int hitListSize;
-
-  protected double singleWordWeight;
-  
-  protected double nearWeight;
-  
-  protected double geneWeight;
-  
-  protected int numberOfSynonym;
-  
-  protected double threshold;
-  
-  protected int minimumResult = 10;
-  
-  protected double synonymWeight;
-
-  protected int dependencyLength;
-  
-  protected String operator = "AND";
   
   protected SolrWrapper wrapper;
   
-  // private int combinationWeight = 4; 
+  protected String operator = "AND";
+  
+  protected double singleWordWeight;
+  
+  protected int hitListSize;  
+  
+  protected double geneWeight; 
 
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
@@ -72,12 +62,6 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     } catch (ClassCastException e) { 
       // all cross-opts are strings?
       this.hitListSize = Integer.parseInt((String) aContext.getConfigParameterValue("hit-list-size"));
-    }
-    try {
-      this.numberOfSynonym = (Integer) (aContext.getConfigParameterValue("numberOfSynonym"));
-    } catch (ClassCastException e) { 
-      // all cross-opts are strings?
-      this.numberOfSynonym = Integer.parseInt((String) aContext.getConfigParameterValue("numberOfSynonym"));
     }
     try {
       this.singleWordWeight = (Double) (aContext.getConfigParameterValue("singleWordWeight"));
@@ -91,30 +75,7 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       // all cross-opts are strings?
       this.geneWeight = Double.parseDouble((String) aContext.getConfigParameterValue("geneWeight"));
     }
-    try {
-      this.nearWeight = (Double) (aContext.getConfigParameterValue("nearWeight"));
-    } catch (ClassCastException e) { 
-      // all cross-opts are strings?
-      this.nearWeight = Double.parseDouble((String) aContext.getConfigParameterValue("nearWeight"));
-    }
-    try {
-      this.dependencyLength = (Integer) (aContext.getConfigParameterValue("dependencyLength"));
-    } catch (ClassCastException e) { 
-      // all cross-opts are strings?
-      this.dependencyLength = Integer.parseInt((String) aContext.getConfigParameterValue("dependencyLength"));
-    }
-    try {
-      this.synonymWeight = (Float) (aContext.getConfigParameterValue("synonymWeight"));
-    } catch (ClassCastException e) { 
-      // all cross-opts are strings?
-      this.synonymWeight = Float.parseFloat((String) aContext.getConfigParameterValue("synonymWeight"));
-    }
-    try {
-      this.threshold = (Float) (aContext.getConfigParameterValue("threshold"));
-    } catch (ClassCastException e) { 
-      // all cross-opts are strings?
-      this.threshold = Float.parseFloat((String) aContext.getConfigParameterValue("threshold"));
-    }
+    minimumResult = this.hitListSize / 10;
     String serverUrl = (String) aContext.getConfigParameterValue("server");
     Integer serverPort = (Integer) aContext.getConfigParameterValue("port");
     Boolean embedded = (Boolean) aContext.getConfigParameterValue("embedded");
@@ -160,11 +121,24 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   }
 
   private SolrDocumentList runQuery(String query, int hitListSize){
-    System.out.println(query);
-    try {
-      return wrapper.runQuery(query, hitListSize);
-    } catch (SolrServerException e) {
-      e.printStackTrace();
+    if(this.dupQuery == null){
+      this.dupQuery = query;
+      try {
+        return wrapper.runQuery(query, hitListSize);
+      } catch (SolrServerException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    } else {
+      if(!this.dupQuery.equals(query)){
+        try {
+          System.out.println(query);
+          this.dupQuery = query;
+          return wrapper.runQuery(query, hitListSize);
+        } catch (SolrServerException e) {
+          e.printStackTrace();
+        }
+      }
     }
     return null;
   }  
@@ -176,42 +150,94 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
     try {
       SolrDocumentList docs = runQuery(newQuery, hitListSize);
       int temp = 0;
-      
-      GeneGeneralizor geneGen = new GeneGeneralizor();
-      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
-        // do gene generalization
-        newQuery = geneGen.generalizeGene(this.keyterms, originalQuery);
-        docs.addAll(runQuery(newQuery, hitListSize));
-        temp++;
-      }
-      // reset
-      newQuery = originalQuery;
-      temp = 0;
       SynonymProvider syn = new SynonymProvider();
-      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
+      while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
         // do synonym expansion 
         newQuery = syn.reformWithSynonym(this.keyterms, originalQuery);
-        docs.addAll(runQuery(newQuery, hitListSize));
+        SolrDocumentList tempDocs = runQuery(newQuery, hitListSize);
+        SolrDocumentList duplicate = new SolrDocumentList();
+        if(tempDocs != null){
+          for(SolrDocument sall : docs){
+            for(SolrDocument stemp : tempDocs){
+              if(stemp.getFieldValue("id").equals(sall.getFieldValue("id"))){
+                duplicate.add(stemp);
+              }
+            }
+          }
+          docs.addAll(tempDocs);
+          docs.removeAll(duplicate);
+        }
         temp++;
       }
-
       // reset
       newQuery = originalQuery;
       temp = 0;
-      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
-        // do AND -> OR replace 
-        newQuery = OperatorSpecialist.changeOperator(newQuery);
-        docs.addAll(runQuery(newQuery, hitListSize));
+      GeneGeneralizor geneGen = new GeneGeneralizor();
+      while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
+        // do gene generalization
+        newQuery = geneGen.generalizeGene(this.keyterms, originalQuery);
+        SolrDocumentList tempDocs = runQuery(newQuery, hitListSize);
+        SolrDocumentList duplicate = new SolrDocumentList();
+        if(tempDocs != null){
+          for(SolrDocument sall : docs){
+            for(SolrDocument stemp : tempDocs){
+              if(stemp.getFieldValue("id").equals(sall.getFieldValue("id"))){
+                duplicate.add(stemp);
+              }
+            }
+          }
+          docs.addAll(tempDocs);
+          docs.removeAll(duplicate);
+        }
         temp++;
       }
+      // do the expansion and synonym
+      temp = 0;
+      syn = new SynonymProvider();
+      while(temp < keyterms.size() - 1){ 
+        newQuery = syn.reformWithSynonymForOR(this.keyterms, newQuery);
+        temp++;
+      }
+      temp = 0;
+      geneGen = new GeneGeneralizor();
+      while(temp < keyterms.size() - 1){
+        newQuery = geneGen.generalizeGeneForOR(this.keyterms, newQuery);
+        temp++;
+      }
+      temp = 0;
+      while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
+        // do AND -> OR replace
+        newQuery = OperatorSpecialist.changeOperator(newQuery);
+        SolrDocumentList tempDocs = runQuery(newQuery, hitListSize);
+        SolrDocumentList duplicate = new SolrDocumentList();
+        if(tempDocs != null){
+          for(SolrDocument sall : docs){
+            for(SolrDocument stemp : tempDocs){
+              if(stemp.getFieldValue("id").equals(sall.getFieldValue("id"))){
+                duplicate.add(stemp);
+              }
+            }
+          }
+          docs.addAll(tempDocs);
+          docs.removeAll(duplicate);
+        }
+        temp++;
+      }      
       // add the result into result set
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
                 (Float) doc.getFieldValue("score"), query);
-        if ((Float) doc.getFieldValue("score") < threshold)
-          break;
-        result.add(r);
-        System.out.println(doc.getFieldValue("id"));
+        boolean duplicate = false;
+        for(RetrievalResult rr : result){
+          if(rr.getDocID() == r.getDocID()) {
+            duplicate = true;
+            break;
+          }
+        }
+        if(!duplicate){
+          result.add(r);
+          System.out.println(doc.getFieldValue("id"));
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();

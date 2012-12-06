@@ -1,9 +1,9 @@
 class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.SimpleBioSolrRetrievalStrategist
 cross-opts:
   hit-list-size: [50]
-  singleWordWeight: [1f]
+  singleWordWeight: [0.8f]
   nearWeight: [0.2f]
-  geneWeight: [1.1f]
+  geneWeight: [1.5f]
   dependencyLength: [50]
   threshold: [0f]
   synonymWeight: [0.5f]

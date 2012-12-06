@@ -223,7 +223,7 @@ public class SimilarPassageExtractor extends SimplePassageExtractor {
 
     // extract all passages in a document
     for (RetrievalResult document : documents) {
-      System.out.println("RetrievalResult: " + document.toString());
+      //System.out.println("RetrievalResult: " + document.toString());
       String id = document.getDocID();
       try {
         String htmlText = wrapper.getDocText(id);
@@ -232,7 +232,7 @@ public class SimilarPassageExtractor extends SimplePassageExtractor {
         String text = Jsoup.parse(htmlText).text().replaceAll("([\177-\377\0-\32]*)", "")/* .trim() */;
         // for now, making sure the text isn't too long
         text = text.substring(0, Math.min(5000, text.length()));
-        System.out.println(text);
+        //System.out.println(text);
 
         // get the list of all passages
         passages = getPassageCandidateSpans(text, id, question);

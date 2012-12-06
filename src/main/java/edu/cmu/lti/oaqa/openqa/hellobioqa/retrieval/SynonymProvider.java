@@ -27,39 +27,42 @@ import edu.mit.jwi.item.POS;
  */
 public class SynonymProvider {
 
-  final static String link = "http://words.bighugelabs.com/api/2/617c51f37fdfd2744d58884123d4bc6c/";
-
   int offset = 0;
 
   public String reformWithSynonym(List<Keyterm> keyterms, String query) {
-    //List<String> temp = getSynonyms(keyterms.get(offset).getText(), 1);
-    List<String> temp = lookUpWordNet(keyterms.get(offset).getText(), 1);
-    if (temp != null) {
-      query = query.replaceFirst(keyterms.get(offset).getText(), temp.get(0));
+    List<String> syns = getSynonyms(keyterms.get(offset).getText(), 3);
+    if (syns != null) {
+      StringBuilder temp = new StringBuilder();
+      temp.append("(");
+      for(String gene : syns){
+        temp.append(gene).append(" OR ");
+      }
+      String result = temp.toString();
+      result = result.substring(0, result.length() - "OR".length() - 2)+")";
+      query = query.replaceFirst(keyterms.get(offset).getText(), result);
+    }
+    offset++;
+    return query;
+  }
+  
+  public String reformWithSynonymForOR(List<Keyterm> keyterms, String query) {
+    List<String> syns = getSynonyms(keyterms.get(offset).getText(), 3);
+    if (syns != null) {
+      StringBuilder temp = new StringBuilder();
+      temp.append("(");
+      temp.append(keyterms.get(offset).getText()).append(" OR ");
+      for(String gene : syns){
+        temp.append(gene).append(" OR ");
+      }
+      String result = temp.toString();
+      result = result.substring(0, result.length() - "OR".length() - 2)+")";
+      query = query.replaceFirst(keyterms.get(offset).getText(), result);
     }
     offset++;
     return query;
   }
 
-  public List<String> getSynonyms(String word, int n) {
-    List<String> result = new ArrayList<String>();
-    try {
-      URL url = new URL(link + word + "/");
-      URLConnection con = url.openConnection();
-      BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-      String inputLine;
-      while ((inputLine = in.readLine()) != null && n > 0) {
-        result.add(inputLine.substring(inputLine.lastIndexOf("|") + 1));
-        n--;
-      }
-      in.close();
-    } catch (Exception e) {
-      return null;
-    }
-    return result;
-  }
-
-  private static List<String> lookUpWordNet(String originalWord, int synCount) {
+  private static List<String> getSynonyms(String originalWord, int synCount) {
     URL url = null;
     List<String> synList = new ArrayList<String>();
     IDictionary dict = null;
@@ -89,14 +92,5 @@ public class SynonymProvider {
       return null;
     }
     return synList;
-  }
-
-  public static void main(String[] args) {
-    try {
-      lookUpWordNet("Parkinson's disease", 7);
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
   }
 }
