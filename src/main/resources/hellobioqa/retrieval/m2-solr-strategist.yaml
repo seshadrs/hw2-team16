@@ -2,12 +2,7 @@ class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.SimpleBioSolrRetrievalStrate
 cross-opts:
   hit-list-size: [50]
   singleWordWeight: [0.8f]
-  nearWeight: [0.2f]
-  geneWeight: [1.5f]
-  dependencyLength: [50]
-  threshold: [0f]
-  synonymWeight: [0.5f]
-  numberOfSynonym: [2]
+  geneWeight: [1.2f]
 server: http://peace.isri.cs.cmu.edu:9080/solr/genomics-simple/
 port: 9080
 
