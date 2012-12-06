@@ -27,7 +27,6 @@ public class GeneGeneralizor {
     if(offset == keyterms.size()) return query;
     List<String> genes = getGeneFamily(keyterms.get(offset).getText());
     if(genes != null){
-      
       StringBuilder temp = new StringBuilder();
       temp.append("(");
       for(String gene : genes){

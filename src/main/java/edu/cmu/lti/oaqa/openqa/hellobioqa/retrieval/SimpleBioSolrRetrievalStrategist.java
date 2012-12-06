@@ -19,6 +19,7 @@ package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.uima.UimaContext;
@@ -130,11 +131,11 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
   protected final List<RetrievalResult> retrieveDocuments(String questionText,
           List<Keyterm> keyterms) {
     this.keyterms = keyterms; // for gene generalization purpose
-    String query = formulateQuery(keyterms);
+    String query = formulateTheInitialQuery(keyterms);
     return retrieveDocuments(query);
   }
 
-  protected String formulateQuery(List<Keyterm> keyterms) {
+  protected String formulateTheInitialQuery(List<Keyterm> keyterms) {
     StringBuffer result = new StringBuffer();
     for(Keyterm term : keyterms){
       if(term.getProbability() == 0){
@@ -154,45 +155,56 @@ public class SimpleBioSolrRetrievalStrategist extends AbstractRetrievalStrategis
       }
     }
     String query = result.toString().trim();
-    query = query.substring(0, query.length() - operator.length() - 2);
+    query = query.substring(0, query.length() - operator.length() - 1);
     return query;
   }
 
-  private List<RetrievalResult> retrieveDocuments(String query) {
+  private SolrDocumentList runQuery(String query, int hitListSize){
     System.out.println(query);
+    try {
+      return wrapper.runQuery(query, hitListSize);
+    } catch (SolrServerException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }  
+  
+  private List<RetrievalResult> retrieveDocuments(String query) {
+    String originalQuery = query;
+    String newQuery = query;
     List<RetrievalResult> result = new ArrayList<RetrievalResult>();
     try {
-      SolrDocumentList docs = wrapper.runQuery(query, hitListSize);
+      SolrDocumentList docs = runQuery(newQuery, hitListSize);
       int temp = 0;
-      SynonymProvider syn = new SynonymProvider();
-      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
-        // do synonym expansion 
-        String newQuery = syn.reformWithSynonym(this.keyterms, query);
-        query = newQuery;
-        System.out.println(query);
-        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
-        temp++;
-      }      
-      temp = 0;
+      
       GeneGeneralizor geneGen = new GeneGeneralizor();
       while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
         // do gene generalization
-        String newQuery = geneGen.generalizeGene(this.keyterms, query);
-        query = newQuery;
-        System.out.println(query);
-        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        newQuery = geneGen.generalizeGene(this.keyterms, originalQuery);
+        docs.addAll(runQuery(newQuery, hitListSize));
         temp++;
       }
-      
+      // reset
+      newQuery = originalQuery;
+      temp = 0;
+      SynonymProvider syn = new SynonymProvider();
+      while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
+        // do synonym expansion 
+        newQuery = syn.reformWithSynonym(this.keyterms, originalQuery);
+        docs.addAll(runQuery(newQuery, hitListSize));
+        temp++;
+      }
+
+      // reset
+      newQuery = originalQuery;
       temp = 0;
       while(docs.size() < this.minimumResult && temp < 5 && temp < keyterms.size() - 1){
         // do AND -> OR replace 
-        String newQuery = OperatorSpecialist.changeOperator(query);
-        query = newQuery;
-        System.out.println(query);
-        docs.addAll(wrapper.runQuery(newQuery, hitListSize));
+        newQuery = OperatorSpecialist.changeOperator(newQuery);
+        docs.addAll(runQuery(newQuery, hitListSize));
         temp++;
       }
+      // add the result into result set
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
                 (Float) doc.getFieldValue("score"), query);

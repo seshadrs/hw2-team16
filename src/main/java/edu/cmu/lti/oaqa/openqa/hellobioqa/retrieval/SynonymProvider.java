@@ -32,7 +32,8 @@ public class SynonymProvider {
   int offset = 0;
 
   public String reformWithSynonym(List<Keyterm> keyterms, String query) {
-    List<String> temp = getSynonyms(keyterms.get(offset).getText(), 1);
+    //List<String> temp = getSynonyms(keyterms.get(offset).getText(), 1);
+    List<String> temp = lookUpWordNet(keyterms.get(offset).getText(), 1);
     if (temp != null) {
       query = query.replaceFirst(keyterms.get(offset).getText(), temp.get(0));
     }
@@ -60,37 +61,32 @@ public class SynonymProvider {
 
   private static List<String> lookUpWordNet(String originalWord, int synCount) {
     URL url = null;
+    List<String> synList = new ArrayList<String>();
+    IDictionary dict = null;
     int count = 0;
     try {
       url = new URL("file", null, "dict");
-    } catch (MalformedURLException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    List<String> synList = new ArrayList<String>();
-
-    IDictionary dict = new Dictionary(url);
-    try {
+      dict = new Dictionary(url);
       dict.open();
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
-
     IIndexWord idxWord = dict.getIndexWord(originalWord, POS.NOUN);
     // Find the first meaning of the word
-    IWordID wordID = idxWord.getWordIDs().get(0);
-    IWord word = dict.getWord(wordID);
-    ISynset synset = word.getSynset();
-    for (IWord w : synset.getWords()) {
-      String synonym = w.getLemma();
-      // replace "_" with ""
-      synonym = synonym.replaceAll("_", " ");
-      System.out.println(synonym);
-      synList.add(synonym);
-      count++;
-      if(count == synCount)
-        break;
+    if(idxWord !=null){
+      IWordID wordID = idxWord.getWordIDs().get(0);
+      IWord word = dict.getWord(wordID);
+      ISynset synset = word.getSynset();
+      for (IWord w : synset.getWords()) {
+        // replace "_" with ""
+        String synonym = w.getLemma().replaceAll("_", " ");
+        synList.add(synonym);
+        count++;
+        if(count == synCount)
+          break;
+      }
+    } else {
+      return null;
     }
     return synList;
   }

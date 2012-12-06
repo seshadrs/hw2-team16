@@ -145,7 +145,7 @@ public class BioPassageExtractor extends SimplePassageExtractor {
         String id = document.getDocID();
         String htmlText = wrapper.getDocText(id);
         // cleaning HTML text
-        String documentText = Jsoup.parse(htmlText).text().replaceAll("([\177-\377\0-\32]*)", "");
+        String documentText = htmlText;//Jsoup.parse(htmlText).text().replaceAll("([\177-\377\0-\32]*)", "");
         // TODO .trim() ?
         // // for now, making sure the text isn't too long
         // String documentText = text.substring(0, Math.min(5000, text.length()));
