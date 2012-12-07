@@ -1,11 +1,21 @@
 package edu.cmu.lti.oaqa.openqa.hellobioqa.passage;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.aliasi.spell.TfIdfDistance;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import com.aliasi.tokenizer.TokenizerFactory;
 import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
+import edu.mit.jwi.Dictionary;
+import edu.mit.jwi.IDictionary;
+import edu.mit.jwi.item.IIndexWord;
+import edu.mit.jwi.item.ISynset;
+import edu.mit.jwi.item.IWord;
+import edu.mit.jwi.item.IWordID;
+import edu.mit.jwi.item.POS;
 
 
 public class Similarity {
@@ -113,6 +123,83 @@ public class Similarity {
       double similarity = tfIdf.proximity(question, passage);
       // System.out.println("SIMILARITY:\t"+similarity);
       return similarity;
+    }
+    
+  }
+  
+  
+  public static class SynonymsSimilarity{
+    
+    private static String getSynonyms(String originalWord, int synCount) {
+      //System.out.println("@@@\tFUnc Called");
+      URL url = null;
+      //List<String> synList = new ArrayList<String>();
+      String synList = "";
+      IDictionary dict = null;
+      int count = 0;
+      try {
+        url = new URL("file", null, "dict");
+        dict = new Dictionary(url);
+        dict.open();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      IIndexWord idxWord = dict.getIndexWord(originalWord, POS.NOUN);
+      // Find the first meaning of the word
+      if(idxWord !=null){
+        IWordID wordID = idxWord.getWordIDs().get(0);
+        IWord word = dict.getWord(wordID);
+        ISynset synset = word.getSynset();
+        for (IWord w : synset.getWords()) {
+          // replace "_" with ""
+          String synonym = w.getLemma().replaceAll("_", " ");
+          //synList.add(synonym);
+          synList+=synonym+" ";
+          count++;
+          if(count == synCount)
+            break;
+        }
+      } else {
+        return null;
+      }
+      return synList;
+    }
+    
+    public static List<String> keytermsSynonymsList(String keytermsText)
+    {
+      //System.out.println("********\t"+keytermsText);
+      List<String> keytermsSynonyms = new ArrayList();
+      for (String keyterm: keytermsText.split(" "))
+      {
+        //System.out.println("\t********\t"+keyterm);
+        String keytermSyns = getSynonyms(keyterm, 4);
+        if (keytermSyns!=null)
+          keytermsSynonyms.add(keytermSyns.toLowerCase());
+      }
+      return keytermsSynonyms;
+    }
+    
+    public static double questionPassageSimilarity(String question, String passage, List<String> keytermsSynonyms)
+    {
+      double similarity = 1.0;
+      passage=passage.toLowerCase();
+      
+      for (String keytermSynonymsText : keytermsSynonyms)
+      {
+        int matchCount=0;
+        String[] keytermSynonyms = keytermSynonymsText.split(" ");
+        for (String synonym : keytermSynonyms)
+        {
+          if (passage.contains(synonym))
+            matchCount+=1;
+        }
+        similarity *= (0.001+matchCount);
+        
+      }
+      
+      //System.out.println("Syn SIm !!!!\t"+similarity);
+      return similarity;
+      
     }
     
   }
