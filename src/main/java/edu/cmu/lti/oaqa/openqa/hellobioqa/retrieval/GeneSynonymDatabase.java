@@ -27,7 +27,7 @@ public class GeneSynonymDatabase {
    * 
    */
   static {
-    File databaseFile = new File("geneDatabase.txt");
+    File databaseFile = new File("dict/geneDatabase.txt");
     try {
       BufferedReader databaseReader = new BufferedReader(new FileReader(databaseFile));
       String line = null;

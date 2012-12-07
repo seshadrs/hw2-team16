@@ -16,9 +16,7 @@
 
 package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -52,10 +50,8 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		try {
 			posTagNER = new PosTagNamedEntityRecognizer();
 			chunker_token = (Chunker) AbstractExternalizable
-					.readObject(new File(
-							"src/main/resources/model/ne-en-bio-genia.TokenShapeChunker"));
-			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File(
-					"src/main/resources/model/ne-en-bio-genetag.hmmchunker"));
+					.readObject(new File("model/ne-en-bio-genia.TokenShapeChunker"));
+			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File("model/ne-en-bio-genetag.hmmchunker"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -190,12 +186,11 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			}
 		}
 
-		// compare with gs
+		/* compare with gs
 		try {
 			// Create file
 			FileWriter fstream = new FileWriter("out.txt", true);
 			BufferedWriter out = new BufferedWriter(fstream);
-
 			Iterator<Keyterm> iter = keyterms.iterator();
 			while (iter.hasNext()) {
 				String keyterm = iter.next().toString();
@@ -207,6 +202,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
+		*/
 		return keyterms;
 	}
 }
