@@ -141,9 +141,7 @@ public class Similarity {
         url = new URL("file", null, "dict");
         dict = new Dictionary(url);
         dict.open();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      
       IIndexWord idxWord = dict.getIndexWord(originalWord, POS.NOUN);
       // Find the first meaning of the word
       if(idxWord !=null){
@@ -161,6 +159,11 @@ public class Similarity {
         }
       } else {
         return null;
+      }
+      
+      } 
+      catch (Exception e) {
+        //e.printStackTrace();
       }
       return synList;
     }

@@ -28,10 +28,10 @@ import com.aliasi.spell.TfIdfDistance;
 public class SimilarBioPassageExtractor extends SimplePassageExtractor {
 
   // the number of sentences a passage is composed of
-  private int sentencesPerPassage = 2;
+  private int sentencesPerPassage = 3;
 
   // the fraction of the top ranking passages that are selected as the result
-  private double topPassagesFraction = 0.1;
+  private double topPassagesFraction = 0.375;
 
   
   private int[] mapPassageInHtml(String passageText, String documentHtml, int defaultStart, int defaultEnd )
@@ -240,6 +240,11 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
       cleanedQuestion = cleanedQuestion.replace(qw, "");
     }
     
+    String synonymsText="";
+    for(String synList: keytermsSynonyms)
+      synonymsText+=synList+" ";
+    synonymsText=synonymsText.trim().replace("  ", " ");
+    
     //if the question has a '?' character, seperate from text so that it gets tokenized separately.
     if (cleanedQuestion.contains("?"))
       cleanedQuestion.replace("?", " ?");
@@ -250,7 +255,9 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
       double NgramSimilarityScore = NgramSimilarity.questionPassageSimilarity(question.substring(nthOccurrence(question, ' ', 2)+1), passage.getQueryString(),3);
       double KeytermSimilarityScore = NgramSimilarity.questionPassageSimilarity(keytermsText, passage.getQueryString(),2);
       double SynonymSimilarity = SynonymsSimilarity.questionPassageSimilarity(question, passage.getQueryString(), keytermsSynonyms);
-      double similarityScore = (double) (0.0001+KeytermSimilarityScore)*(0.00000001+TFIDFSimilarityScore)*(0.0001+SynonymSimilarity);
+      double synonymExtendedTFIDFSimilarityScore = TFIDFSimilarity.questionPassageSimilarity(question+" "+synonymsText, passage.getQueryString());
+      double similarityScore = (double) (0.0001+KeytermSimilarityScore)*(0.00000001+TFIDFSimilarityScore)*(0.0001+SynonymSimilarity)*(0.00000001+ synonymExtendedTFIDFSimilarityScore);
+      //double similarityScore = (double) Math.exp((double)(KeytermSimilarityScore+TFIDFSimilarityScore+SynonymSimilarity));
       passages.get(i).setProbablity((float) similarityScore);
     }
 
@@ -281,6 +288,7 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
       keytermsText+=keyterm.getText()+" ";
     keytermsText=keytermsText.trim();
     List<String> keytermsSynonyms = SynonymsSimilarity.keytermsSynonymsList(keytermsText);
+    
     
  // compute the TFIDF tables using text from all documents
     List<String> allDocuments = new ArrayList();
