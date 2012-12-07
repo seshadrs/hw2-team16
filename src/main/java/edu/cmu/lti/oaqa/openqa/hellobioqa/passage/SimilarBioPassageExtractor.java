@@ -14,7 +14,9 @@ import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
 
 import edu.cmu.lti.oaqa.openqa.hello.passage.SimplePassageExtractor;
 import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.NgramSimilarity;
+import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.SynonymsSimilarity;
 import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.TFIDFSimilarity;
+import edu.stanford.nlp.util.StringUtils;
 
 import com.aliasi.sentences.MedlineSentenceModel;
 import com.aliasi.sentences.SentenceModel;
@@ -26,10 +28,10 @@ import com.aliasi.spell.TfIdfDistance;
 public class SimilarBioPassageExtractor extends SimplePassageExtractor {
 
   // the number of sentences a passage is composed of
-  private int sentencesPerPassage = 3;
+  private int sentencesPerPassage = 2;
 
   // the fraction of the top ranking passages that are selected as the result
-  private double topPassagesFraction = 0.25;
+  private double topPassagesFraction = 0.1;
 
   
   private int[] mapPassageInHtml(String passageText, String documentHtml, int defaultStart, int defaultEnd )
@@ -53,6 +55,103 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
     }
     
     int[] span ={passageStart,passageEnd};
+    return span;
+  }
+  
+  
+  private List<Integer> occuranceIndices(String substring, String text)
+  {
+//    System.out.println("!!!\tOI");
+    List<Integer> indices = new ArrayList();
+    if (substring =="" || text.contains(substring)==false)
+      return indices;
+    int ctr=0;
+    while (text.contains(substring))
+    {
+      //System.out.println("OI");
+      try{
+      indices.add(text.indexOf(substring));
+      text=text.replaceFirst(substring, "");
+      }
+      catch(Exception e)
+      {}
+      ctr++;
+      if (ctr>10)
+        break;
+    }
+    
+    return indices;  
+  }
+  
+  private int[] mapPassageInHtmlExhaustive(String passageText, String documentHtml, int defaultStart, int defaultEnd )
+  {
+//    System.out.print("!!!\tEntered\t");
+    passageText = passageText.toLowerCase();
+    documentHtml = documentHtml .toLowerCase();
+    
+    String[] words = passageText.split(" ");
+    
+    int passageStart = defaultStart;
+    int passageEnd = defaultEnd;
+    
+    List<Integer> possibleStartIndices = new ArrayList();
+    int i=0;
+    int ctr=0;
+    while(i<words.length && possibleStartIndices.size()==0)
+      {
+      possibleStartIndices=occuranceIndices(words[i],documentHtml);
+//      System.out.println("WL1");
+      i+=1;
+      ctr++;
+      if (ctr>10)
+        break;
+      }
+    List<Integer> possibleEndIndices = new ArrayList();
+    int j=words.length-1;
+    ctr=0;
+    while(j>0 && possibleEndIndices.size()==0)
+      {
+      possibleEndIndices=occuranceIndices(words[j],documentHtml);
+//      System.out.println("WL2");
+      j-=1;
+      ctr++;
+      if (ctr>10)
+        break;
+      }
+    
+    Collections.reverse(possibleEndIndices);
+//    System.out.println("EX WL2");
+    double bestScore =0.00;
+    for(Integer possibleStartIndex : possibleStartIndices.subList(0, Math.min(possibleStartIndices.size(), 10)))
+    {
+      for(Integer possibleEndIndex : possibleEndIndices.subList(0, Math.min(possibleEndIndices.size(), 10)))
+      {
+        if (possibleEndIndex<=possibleStartIndex)
+          break;
+        
+        String text = documentHtml.substring(possibleStartIndex, possibleEndIndex);
+        Integer length = possibleEndIndex-possibleStartIndex;
+        Integer wordMatches = 0;
+        
+        for (String w : words)
+        {
+          if (text.contains(w))
+            wordMatches+=1;
+        }
+        
+        double score = (double)wordMatches/(double)length;
+        if (score>=bestScore)
+          {
+            bestScore=score;
+            passageStart= possibleStartIndex;
+            passageEnd= possibleEndIndex;
+          }
+      }
+    }
+    
+    
+    int[] span ={passageStart,passageEnd};
+//    System.out.println("Done");
     return span;
   }
   
@@ -125,7 +224,7 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
     return passageSpans;
   }
 
-  private List<PassageCandidate> setPassageCandidateScores(List<PassageCandidate> passages, String question, String keytermsText) {
+  private List<PassageCandidate> setPassageCandidateScores(List<PassageCandidate> passages, String question, String keytermsText, List<String> keytermsSynonyms) {
    
     // remove question words from the question so that TFIDF doesn't go crazy thinking those words
     // are important
@@ -150,7 +249,8 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
       double TFIDFSimilarityScore = TFIDFSimilarity.questionPassageSimilarity(question, passage.getQueryString());
       double NgramSimilarityScore = NgramSimilarity.questionPassageSimilarity(question.substring(nthOccurrence(question, ' ', 2)+1), passage.getQueryString(),3);
       double KeytermSimilarityScore = NgramSimilarity.questionPassageSimilarity(keytermsText, passage.getQueryString(),2);
-      double similarityScore = (double) (0.0001+KeytermSimilarityScore)*(0.00000001+TFIDFSimilarityScore);
+      double SynonymSimilarity = SynonymsSimilarity.questionPassageSimilarity(question, passage.getQueryString(), keytermsSynonyms);
+      double similarityScore = (double) (0.0001+KeytermSimilarityScore)*(0.00000001+TFIDFSimilarityScore)*(0.0001+SynonymSimilarity);
       passages.get(i).setProbablity((float) similarityScore);
     }
 
@@ -175,6 +275,12 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
     List<PassageCandidate> allPassages = new ArrayList<PassageCandidate>();
     List<PassageCandidate> passages = new ArrayList<PassageCandidate>();
     
+    
+    String keytermsText = "";
+    for(Keyterm keyterm : keyterms)
+      keytermsText+=keyterm.getText()+" ";
+    keytermsText=keytermsText.trim();
+    List<String> keytermsSynonyms = SynonymsSimilarity.keytermsSynonymsList(keytermsText);
     
  // compute the TFIDF tables using text from all documents
     List<String> allDocuments = new ArrayList();
@@ -207,18 +313,14 @@ public class SimilarBioPassageExtractor extends SimplePassageExtractor {
 
         // cleaning HTML text
         String text = Jsoup.parse(htmlText).text().replaceAll("([\177-\377\0-\32]*)", "")/* .trim() */;
-        // for now, making sure the text isn't too long
-        // text = text.substring(0, Math.min(5000, text.length()));
-        System.out.println(text);
+        // Making sure the text isn't too long to print
+        String printText = text.substring(0, Math.min(500, text.length()));
+        System.out.println(printText);
 
         // get the list of all passages
         passages = getPassageCandidateSpans(text, id, question, htmlText);
 
-        // set scores for each passage based on its similarity with the question
-        String keytermsText = "";
-        for(Keyterm keyterm : keyterms)
-          keytermsText+=keyterm.getText()+" ";
-        passages = setPassageCandidateScores(passages, question, keytermsText);
+        passages = setPassageCandidateScores(passages, question, keytermsText, keytermsSynonyms);
 
         // add passages from this document to all pasasges list
         for (int i = 0; i < passages.size(); i++)

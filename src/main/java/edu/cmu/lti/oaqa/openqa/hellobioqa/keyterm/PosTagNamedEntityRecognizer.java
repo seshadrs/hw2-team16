@@ -16,6 +16,11 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 
+/**
+ * 
+ * @author team16
+ *
+ */
 public class PosTagNamedEntityRecognizer {
 
 	private StanfordCoreNLP pipeline;
@@ -25,7 +30,12 @@ public class PosTagNamedEntityRecognizer {
 		props.put("annotators", "tokenize, ssplit, pos");
 		pipeline = new StanfordCoreNLP(props);
 	}
-
+	/**
+	 * Add spans of all elements in Candidate ArrayList into Map begin2end
+	 * Pre-requisite: spans of successive elements are adjacent
+	 * @param candidate
+	 * @param begin2end
+	 */
 	public void addToMap(List<CoreLabel> candidate,
 			Map<Integer, Integer> begin2end) {
 		int begin = candidate.get(0).beginPosition();
@@ -34,7 +44,11 @@ public class PosTagNamedEntityRecognizer {
 		candidate.clear();
 	}
 
-	// Get Verb From Question
+	/**
+	 * Get verb spans from string text using StanfordNLP Core
+	 * @param text
+	 * @return Map<Integer, Integer>
+	 */
 	public Map<Integer, Integer> getVerbSpans(String text) {
 		Map<Integer, Integer> begin2end = new HashMap<Integer, Integer>();
 		Annotation document = new Annotation(text);
@@ -48,6 +62,7 @@ public class PosTagNamedEntityRecognizer {
 				if (i > 0)
 					token_last = tokenList.get(i - 1);
 				String pos = token.get(PartOfSpeechAnnotation.class);
+				// Get rid of verbs after WHAT, HOW, and verbs' POS equal to VBG
 				if (pos.startsWith("VB")
 						&& i > 0
 						&& !token_last.get(PartOfSpeechAnnotation.class)
@@ -63,7 +78,11 @@ public class PosTagNamedEntityRecognizer {
 		return begin2end;
 	}
 
-	// Get Noun From Question
+	/**
+	 * Get noun spans from string text using StanfordNLP Core
+	 * @param text
+	 * @return Map<Integer, Integer
+	 */
 	public Map<Integer, Integer> getNounSpans(String text) {
 		Map<Integer, Integer> begin2end = new HashMap<Integer, Integer>();
 		Annotation document = new Annotation(text);
@@ -82,6 +101,8 @@ public class PosTagNamedEntityRecognizer {
 					token_next = tokenList.get(i + 1);
 				String pos = token.get(PartOfSpeechAnnotation.class);
 				if (pos.startsWith("JJ") || pos.equals("VBG")) {
+					//If last token is adjective, continue add current one
+					//If not, handle ArrayList Candidate
 					if (candidate.size() > 0) {
 						if (i > 0
 								&& !token_last
@@ -91,6 +112,7 @@ public class PosTagNamedEntityRecognizer {
 					}
 					candidate.add(token);
 				} else if (pos.startsWith("NN")) {
+					//Get rid of specific word "role", kind of like cheating...
 					if (i > 0
 							&& i < tokenList.size() - 1
 							&& token_last.get(PartOfSpeechAnnotation.class)
@@ -100,6 +122,7 @@ public class PosTagNamedEntityRecognizer {
 					} else
 						candidate.add(token);
 				} else if (candidate.size() > 0) {
+					//Find possessive case
 					if (pos.equals("POS")) {
 						if (sentence
 								.toString()
