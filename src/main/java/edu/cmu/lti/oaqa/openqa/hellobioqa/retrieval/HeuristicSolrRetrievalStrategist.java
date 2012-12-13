@@ -233,9 +233,11 @@ public class HeuristicSolrRetrievalStrategist extends AbstractRetrievalStrategis
         }
         temp++;
       }
+      
       // do the expansion and synonym
       temp = 0;
       syn = new NormalSynonymProvider();
+      newQuery = originalQuery;
       while(temp < keyterms.size() - 1){ 
         newQuery = syn.reformWithSynonymForOR(this.keyterms, newQuery);
         temp++;
@@ -246,6 +248,7 @@ public class HeuristicSolrRetrievalStrategist extends AbstractRetrievalStrategis
         newQuery = geneGen.generalizeGeneForOR(this.keyterms, newQuery);
         temp++;
       }
+      
       temp = 0;
       while(docs.size() < this.minimumResult && temp < keyterms.size() - 1){
         // do AND -> OR replace
@@ -265,6 +268,8 @@ public class HeuristicSolrRetrievalStrategist extends AbstractRetrievalStrategis
         }
         temp++;
       }      
+      
+      
       // add the result into result set
       for (SolrDocument doc : docs) {
         RetrievalResult r = new RetrievalResult((String) doc.getFieldValue("id"),
