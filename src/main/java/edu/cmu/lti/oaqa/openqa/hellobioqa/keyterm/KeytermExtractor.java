@@ -53,9 +53,9 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			posTagNER = new PosTagNamedEntityRecognizer();
 			chunker_token = (Chunker) AbstractExternalizable
 					.readObject(new File(
-							"src/main/resources/model/ne-en-bio-genia.TokenShapeChunker"));
+							"model/ne-en-bio-genia.TokenShapeChunker"));
 			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File(
-					"src/main/resources/model/ne-en-bio-genetag.hmmchunker"));
+					"model/ne-en-bio-genetag.hmmchunker"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
