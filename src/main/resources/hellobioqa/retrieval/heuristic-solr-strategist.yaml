@@ -1,4 +1,4 @@
-class: edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.HeuristicSolrRetrievalStrategist
+class: edu.cmu.lti.oaqa.openqa.hellobioqa.team16.retrieval.HeuristicSolrRetrievalStrategist
 cross-opts:
   hit-list-size: [50]
   singleWordWeight: [1f]
