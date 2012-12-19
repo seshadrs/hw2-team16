@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.openqa.hellobioqa.passage;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.passage.team16;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,9 +13,9 @@ import edu.cmu.lti.oaqa.framework.data.PassageCandidate;
 import edu.cmu.lti.oaqa.framework.data.RetrievalResult;
 
 import edu.cmu.lti.oaqa.openqa.hello.passage.SimplePassageExtractor;
-import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.NgramSimilarity;
-import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.SynonymsSimilarity;
-import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.Similarity.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.team16.Similarity.NgramSimilarity;
+import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.team16.Similarity.SynonymsSimilarity;
+import edu.cmu.lti.oaqa.openqa.hellobioqa.passage.team16.Similarity.TFIDFSimilarity;
 
 import com.aliasi.sentences.MedlineSentenceModel;
 import com.aliasi.sentences.SentenceModel;

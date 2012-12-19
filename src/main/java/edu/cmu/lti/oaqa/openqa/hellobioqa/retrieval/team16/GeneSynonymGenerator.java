@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.team16;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.team16;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,11 +51,8 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		super.initialize(aContext);
 		try {
 			posTagNER = new PosTagNamedEntityRecognizer();
-			chunker_token = (Chunker) AbstractExternalizable
-					.readObject(new File(
-							"model/ne-en-bio-genia.TokenShapeChunker"));
-			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File(
-					"model/ne-en-bio-genetag.hmmchunker"));
+			chunker_token = (Chunker) AbstractExternalizable.readObject(new File("team16/model/ne-en-bio-genia.TokenShapeChunker"));
+			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File("team16/model/ne-en-bio-genetag.hmmchunker"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

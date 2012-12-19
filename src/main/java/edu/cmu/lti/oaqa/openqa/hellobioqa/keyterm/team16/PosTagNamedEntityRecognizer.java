@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.team16;
 
 import java.util.ArrayList;
 import java.util.HashMap;

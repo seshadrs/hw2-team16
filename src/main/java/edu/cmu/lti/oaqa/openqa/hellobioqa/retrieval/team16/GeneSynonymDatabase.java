@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval.team16;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +27,7 @@ public class GeneSynonymDatabase {
    * 
    */
   static {
-    File databaseFile = new File("dict/geneDatabase.txt");
+    File databaseFile = new File("team16/dict/geneDatabase.txt");
     try {
       BufferedReader databaseReader = new BufferedReader(new FileReader(databaseFile));
       String line = null;
