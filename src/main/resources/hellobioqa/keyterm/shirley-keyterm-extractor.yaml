@@ -1,4 +1,4 @@
-class: edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.KeytermExtractor
+class: edu.cmu.lti.oaqa.openqa.hellobioqa.team16.keyterm.KeytermExtractor
 
 persistence-provider: |
   inherit: ecd.default-log-persistence-provider

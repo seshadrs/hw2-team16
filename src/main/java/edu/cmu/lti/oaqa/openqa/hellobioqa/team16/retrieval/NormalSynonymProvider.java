@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.cmu.lti.oaqa.openqa.hellobioqa.retrieval;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.team16.retrieval;
 
 import java.io.IOException;
 import java.net.URL;
