@@ -43,11 +43,11 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		try {
 			// Initialize Standfordnlp Core
 			posTagNER = new PosTagNamedEntityRecognizer();
-			URL hmmpath = this.getClass().getClassLoader().getResource("model/ne-en-bio-genetag.hmmchunker");
+			URL hmmpath = this.getClass().getClassLoader().getResource("team16/model/ne-en-bio-genetag.hmmchunker");
 			ObjectInputStream ois = new ObjectInputStream(hmmpath.openStream());
 			chunker_hmm = (Chunker) ois.readObject();
 			Streams.closeQuietly(ois);
-			URL tokenpath = this.getClass().getClassLoader().getResource("model/ne-en-bio-genia.TokenShapeChunker");
+			URL tokenpath = this.getClass().getClassLoader().getResource("team16/model/ne-en-bio-genia.TokenShapeChunker");
 			ois = new ObjectInputStream(tokenpath.openStream());
 			chunker_token = (Chunker) ois.readObject();
 			Streams.closeQuietly(ois);

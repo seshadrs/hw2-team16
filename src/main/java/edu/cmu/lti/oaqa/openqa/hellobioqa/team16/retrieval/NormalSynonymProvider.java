@@ -95,7 +95,7 @@ public class NormalSynonymProvider {
     IDictionary dict = null;
     int count = 0;
     try {
-      url = new URL("file", null, "dict");
+      url = new URL("file", null, "team16/dict");
       dict = new Dictionary(url);
       dict.open();
     } catch (IOException e) {
