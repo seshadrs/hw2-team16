@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.openqa.hellobioqa.passage;
+package edu.cmu.lti.oaqa.openqa.hellobioqa.team16.passage;
 
 import java.net.URL;
 import java.util.ArrayList;
