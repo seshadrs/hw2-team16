@@ -16,9 +16,8 @@
 
 package edu.cmu.lti.oaqa.openqa.hellobioqa.keyterm.team16;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.ObjectInputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +32,7 @@ import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunker;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.chunk.ConfidenceChunker;
-import com.aliasi.util.AbstractExternalizable;
+import com.aliasi.util.Streams;
 
 import edu.cmu.lti.oaqa.cse.basephase.keyterm.AbstractKeytermExtractor;
 import edu.cmu.lti.oaqa.framework.data.Keyterm;
@@ -51,8 +50,14 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		super.initialize(aContext);
 		try {
 			posTagNER = new PosTagNamedEntityRecognizer();
-			chunker_token = (Chunker) AbstractExternalizable.readObject(new File("team16/model/ne-en-bio-genia.TokenShapeChunker"));
-			chunker_hmm = (Chunker) AbstractExternalizable.readObject(new File("team16/model/ne-en-bio-genetag.hmmchunker"));
+			URL hmmpath = this.getClass().getClassLoader().getResource("team16/model/ne-en-bio-genetag.hmmchunker");
+			ObjectInputStream ois = new ObjectInputStream(hmmpath.openStream());
+			chunker_hmm = (Chunker) ois.readObject();
+			Streams.closeQuietly(ois); 
+			URL tokenpath = this.getClass().getClassLoader().getResource("team16/model/ne-en-bio-genia.TokenShapeChunker");
+			ois = new ObjectInputStream(tokenpath.openStream());
+		  chunker_token = (Chunker) ois.readObject();
+		  Streams.closeQuietly(ois);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -187,7 +192,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 			}
 		}
 
-		// compare with gs
+		/* compare with gs
 		try {
 			// Create file
 			FileWriter fstream = new FileWriter("out.txt", true);
@@ -204,6 +209,7 @@ public class KeytermExtractor extends AbstractKeytermExtractor {
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
+		*/
 		return keyterms;
 	}
 }

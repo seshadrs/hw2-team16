@@ -5,9 +5,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import com.aliasi.chunk.Chunker;
+import com.aliasi.util.Streams;
 
 /**
  * 
@@ -27,9 +34,17 @@ public class GeneSynonymDatabase {
    * 
    */
   static {
-    File databaseFile = new File("team16/dict/geneDatabase.txt");
+    URL dbURL = GeneSynonymDatabase.class.getClassLoader().getResource("team16/dict/geneDatabase.txt");
+    InputStream is = null;
     try {
-      BufferedReader databaseReader = new BufferedReader(new FileReader(databaseFile));
+      is = dbURL.openStream();
+    } catch (IOException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+    // File databaseFile = new File("team16/dict/geneDatabase.txt");
+    try {
+      BufferedReader databaseReader = new BufferedReader(new InputStreamReader(is));
       String line = null;
       line = databaseReader.readLine();
       while ((line = databaseReader.readLine()) != null) {
